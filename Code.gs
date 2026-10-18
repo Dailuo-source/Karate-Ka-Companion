@@ -53,6 +53,7 @@ const SCHEMA = {
       ['status', 'How it feels', 'status', 110],
       ['kiais', 'Kiais', 'num', 60],
       ['reminders', 'Key reminders (one per line)', 'text', 320],
+      ['kiaiNotes', 'Kiai notes (one per line, in order)', 'text', 260],
       ['updated', 'Updated', 'datetime', 150],
     ],
   },
@@ -543,7 +544,7 @@ function buildTab_(ss, sch) {
     if (type === 'bool') rng.insertCheckboxes();
     if (type === 'date') rng.setNumberFormat('ddd mmm d, yyyy');
     if (type === 'datetime') rng.setNumberFormat('mmm d, yyyy h:mm am/pm');
-    if (field === 'note' || field === 'reminders') rng.setWrap(true);
+    if (field === 'note' || field === 'reminders' || field === 'kiaiNotes') rng.setWrap(true);
     if (w) sh.setColumnWidth(col, w);
     if (field === 'id') sh.hideColumns(col);
   });

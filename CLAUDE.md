@@ -5,7 +5,7 @@
 > At the end of a work session, update **Status** and add one line to **Changelog** (keep about 10).
 
 Gary's private karate notebook. Dated notes typed Kata / Kihon / Kumite / Sensei says / Goals / General,
-a page per kata (how it feels, fixed kiai count, key reminders, every note on that kata) and a Goals tab.
+a page per kata (how it feels, fixed kiai count with a collapsible note per kiai, key reminders, every note on that kata) and a Goals tab.
 Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 
 ## Where things live
@@ -14,7 +14,7 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 | --- | --- |
 | Live app | https://karate-ka-companion.pages.dev/ (Cloudflare Pages from `main`) |
 | Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, My kata, Access |
-| Backend | Apps Script project "Karate-Ka Companion" bound to the sheet; source is `Code.gs` here. Web app version 2 (Execute as Gary, access Anyone), URL in `API_URL` in index.html |
+| Backend | Apps Script project "Karate-Ka Companion" bound to the sheet; source is `Code.gs` here. Web app version 3 (Execute as Gary, access Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the dojo Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
 | Setup guide | `SETUP.md` |
 
@@ -83,3 +83,17 @@ Inside the `index.html` script, search for:
 - 2026-10-18: Add Google sign-in client ID
 - 2026-10-18: Connect the app to the live Apps Script web app
 - 2026-10-18: Karate-Ka Companion: private karate notebook
+
+## Kiai notes
+- `My kata` column "Kiai notes (one per line, in order)": line N = kiai N. Notes past the current count are kept, just hidden.
+- On the kata page "Kiai details" starts collapsed every time (`kiaiOpen`, not saved) and opens to a numbered list; owner gets "Edit kiai notes".
+- Adding a sheet column: run `setup` once in Apps Script (it only adds missing headers), then redeploy a New version.
+
+## Status
+- Working: live at karate-ka-companion.pages.dev, Gary signed in and using it.
+- Next up: nothing pending.
+
+## Changelog (latest first, keep about 10 lines)
+- 2026-10-18: Per-kiai notes on each kata page (collapsed by default, editable). Web app v3.
+- 2026-10-18: First release; Google sign-in (Testing mode), moved to karate-ka-companion.pages.dev.
+

@@ -126,6 +126,20 @@ const settle = page => page.waitForTimeout(700);
   await page.click('[data-act=kiai][data-v="1"]');
   await settle(page);
 
+  // kiai notes: collapsed by default, open, edit, save
+  assert.equal(await page.locator('.klist').count(), 0, 'kiai details start collapsed');
+  await page.click('[data-act=kiai-toggle]');
+  assert.equal(await page.locator('.klist li').count(), 2);
+  await page.click('[data-act=edit-kiai]');
+  await page.fill('input[name=k0]', 'Gyaku Zuki');
+  await page.fill('input[name=k1]', 'Closed Fist Jiju Uke');
+  await page.click('#kiaiForm button[type=submit]');
+  await settle(page); await settle(page);
+  assert.ok((await page.textContent('.klist')).includes('Closed Fist Jiju Uke'));
+  await shot(page, '06b-kiai-notes');
+  await page.click('[data-act=kiai-toggle]');
+  assert.equal(await page.locator('.klist').count(), 0);
+
   // goals: mark done
   await page.click('.tab[data-v=goals]');
   await page.click('[data-act=goal-done]');
@@ -156,6 +170,7 @@ const settle = page => page.waitForTimeout(700);
   const st = B.api({ session: await page.evaluate(() => localStorage.getItem('kc.session')) });
   assert.equal(st.state.notes.length, 6);
   assert.equal(st.state.kata[0].kiais, 2);
+  assert.equal(st.state.kata[0].kiaiNotes, 'Gyaku Zuki\nClosed Fist Jiju Uke');
   assert.equal(st.state.kata[0].status, 'Polishing');
   assert.equal(st.state.notes.find(n => n.type === 'Goals').done, true);
   assert.deepEqual(errs, [], errs.join('\n'));

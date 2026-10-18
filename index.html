@@ -124,6 +124,15 @@ button,.tile span,.pillr span{transition:transform .12s ease,filter .12s ease,ba
 .kiai{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:16px;padding:8px 8px 8px 12px}
 .kiai .n{font-size:24px;font-weight:900;line-height:1.1}
 .kiai svg{width:34px;height:34px;flex-shrink:0}
+.kdet{background:var(--surface);border-radius:16px;overflow:hidden}
+.kdet-h{display:flex;align-items:center;gap:8px;width:100%;min-height:48px;padding:0 14px;font-size:15px;font-weight:800;text-align:left}
+.kdet-c{font-size:12px;font-weight:800;color:var(--muted)}
+.kdet .chev{width:18px;height:18px;display:inline-flex;transition:transform .2s}
+.kdet-h[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.klist{list-style:none;margin:0;padding:0 14px 6px}
+.klist li{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:15px;font-weight:700}
+.kn{width:26px;height:26px;border-radius:13px;background:#FFD66B;color:#1E2235;font-size:13px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.kdet .mini{margin:2px 14px 12px}
 .step{width:44px;height:44px;border-radius:14px;background:var(--sunk);font-size:24px;font-weight:900}
 .step.plus{background:var(--accent);color:var(--accent-ink)}
 .box{margin:14px 18px 0;background:var(--surface);border-radius:20px;padding:14px 16px}
@@ -283,7 +292,7 @@ let S={notes:[],kata:[],access:[],kataList:[]};
 let auth="signin", ready=false, noAccess={email:"",requested:false}, setupMsg="";
 let queue=[],inflight=false,flushT=0,retryT=0,lastSync=0,syncState="",sheetUrl=LS.get("sheet","");
 let tab=LS.get("tab","notes"), typeF="All", q="", dateF="all", sortNew=LS.get("sort","new")!=="old";
-let kataOpen=null, kq="", sheet=null, lastFocus=null;
+let kataOpen=null, kq="", sheet=null, lastFocus=null, kiaiOpen=false;
 
 function readLinkParams(){
   try{
@@ -303,7 +312,7 @@ function normalize(st){
     notes:(st.notes||[]).map(r=>Object.assign({},r,{type:typeOf(r.type).k,date:+r.date||+r.added||Date.now(),added:+r.added||0,
       title:str(r.title),note:String(r.note==null?"":r.note),kata:str(r.kata),from:FROM.find(f=>eqi(f.k,r.from))?FROM.find(f=>eqi(f.k,r.from)).k:"Me",
       video:str(r.video),pinned:!!r.pinned,done:!!r.done})),
-    kata:(st.kata||[]).map(r=>Object.assign({},r,{kata:str(r.kata),status:STATUSES.find(s=>eqi(s,r.status))||"",kiais:r.kiais==null||r.kiais===""?null:+r.kiais,reminders:String(r.reminders==null?"":r.reminders)})),
+    kata:(st.kata||[]).map(r=>Object.assign({},r,{kata:str(r.kata),status:STATUSES.find(s=>eqi(s,r.status))||"",kiais:r.kiais==null||r.kiais===""?null:+r.kiais,reminders:String(r.reminders==null?"":r.reminders),kiaiNotes:String(r.kiaiNotes==null?"":r.kiaiNotes)})),
     access:(st.access||[]).map(r=>Object.assign({},r,{email:str(r.email),status:str(r.status)||"Requested"})),
     kataList:Array.isArray(st.kataList)?st.kataList:[]
   };
@@ -517,6 +526,21 @@ function kataRows(){
       <span class="badges">${info&&info.status?`<span class="badge s-${info.status}">${esc(info.status)}</span>`:""}
       <span class="badge">${c} note${c===1?"":"s"}${info&&info.kiais!=null?" · "+info.kiais+" kiai"+(info.kiais===1?"":"s"):""}</span></span></button>`;}).join("")}</div>`;
 }
+const kiaiNotes=info=>String((info&&info.kiaiNotes)||"").split("\n");
+function kiaiList(info,can){
+  const n=info.kiais,notes=kiaiNotes(info),filled=notes.slice(0,n).filter(x=>x.trim()).length;
+  return `<div class="kdet"><button class="kdet-h" data-act="kiai-toggle" aria-expanded="${kiaiOpen}" aria-controls="kdetBody">
+      <span class="grow">Kiai details</span><span class="kdet-c">${filled} of ${n} noted</span><span class="chev" aria-hidden="true">${I.down}</span></button>
+    ${kiaiOpen?`<div id="kdetBody"><ol class="klist">${Array.from({length:n},(_,i)=>{const t=(notes[i]||"").trim();
+      return `<li><span class="kn">${i+1}</span><span class="${t?"":"sub"}">${t?esc(t):"No note yet"}</span></li>`;}).join("")}</ol>
+      ${can?`<button class="mini" data-act="edit-kiai">Edit kiai notes</button>`:""}</div>`:""}</div>`;
+}
+function kiaiSheet(name){
+  const info=kataInfo(name)||{},n=info.kiais||0,notes=kiaiNotes(info);
+  return `<form id="kiaiForm">`+shead("Kiai notes")+`<p class="sub" style="margin:0">${esc(name)} · ${n} kiai${n===1?"":"s"}, in order</p>
+    ${Array.from({length:n},(_,i)=>`<label class="field"><span>Kiai ${i+1}</span><input class="inp" name="k${i}" value="${esc((notes[i]||"").trim())}" maxlength="80" placeholder="e.g. Gyaku Zuki" ${i===0?"autofocus":""}></label>`).join("")}
+    <div class="btns"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></form>`;
+}
 function kataPage(name){
   const info=kataInfo(name)||{},en=kataEn(name),can=ROLE==="owner";
   const notes=S.notes.filter(n=>eqi(n.kata,name)).sort((a,b)=>byDate(b,a));
@@ -529,6 +553,7 @@ function kataPage(name){
       <div class="seg" role="group" aria-label="How it feels">${STATUSES.map(s=>`<button data-act="kstatus" data-v="${s}" aria-pressed="${info.status===s}" ${can?"":"disabled"}>${s}</button>`).join("")}</div>
       <div class="kiai">${KIAI}<div class="grow"><div class="sub">Kiais in this kata</div><div class="n">${k==null?"Not set":k}</div></div>
         ${can?`<button class="step" data-act="kiai" data-v="-1" aria-label="One less kiai" ${!k?"disabled":""}>−</button><button class="step plus" data-act="kiai" data-v="1" aria-label="One more kiai">+</button>`:""}</div>
+      ${k?kiaiList(info,can):""}
       <a href="${KATA_SITE}?kata=${encodeURIComponent(name)}" target="_blank" rel="noopener" style="font-size:14px;font-weight:800;color:var(--kata-i);display:flex;align-items:center;gap:6px;min-height:24px">Open in the dojo Kata Tracker<span style="width:16px;height:16px;display:inline-flex">${I.ext}</span></a>
     </section>
     <section class="box"><div class="row"><h2 class="grow" style="margin:0">Key reminders</h2>${can?`<button class="mini" data-act="edit-rem">Edit</button>`:""}</div>
@@ -545,7 +570,7 @@ function openSheet(s){hideToast();if(!sheet)lastFocus=document.activeElement;she
   setTimeout(()=>{const f=$("#sheet [autofocus]")||$("#sheet .close");if(f)f.focus();},40);}
 function closeSheet(){sheet=null;const w=$("#sheetWrap");if(w)w.hidden=true;document.body.style.overflow="";if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
 function renderSheet(){if(!sheet)return;const b=$("#sheet");
-  b.innerHTML=sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):accountSheet();
+  b.innerHTML=sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):sheet.type==="kiai"?kiaiSheet(sheet.name):accountSheet();
   b.setAttribute("aria-label",sheet.type==="form"?"Note":sheet.type);replayTap();}
 const shead=t=>`<div class="shead"><h2>${esc(t)}</h2><button type="button" class="ibtn close" data-act="close" aria-label="Close">${I.close}</button></div>`;
 function noteSheet(id){
@@ -618,7 +643,7 @@ function toast(msg,act){const el=$("#toast");tAct=act||null;el.innerHTML=`<span 
 function hideToast(){const el=$("#toast");if(el)el.hidden=true;tAct=null;}
 function armed(btn){if(btn.dataset.armed==="1")return true;const orig=btn.innerHTML;btn.dataset.armed="1";btn.textContent=btn.dataset.confirm;setTimeout(()=>{if(btn.isConnected){btn.dataset.armed="";btn.innerHTML=orig;}},3200);return false;}
 
-function onData(){if(auth!=="ok"||!ready)return;render();if(sheet&&sheet.type!=="form"&&sheet.type!=="rem")renderSheet();}
+function onData(){if(auth!=="ok"||!ready)return;render();if(sheet&&sheet.type!=="form"&&sheet.type!=="rem"&&sheet.type!=="kiai")renderSheet();}
 
 /* ---------- taps ---------- */
 document.addEventListener("click",e=>{
@@ -642,11 +667,13 @@ document.addEventListener("click",e=>{
     case"del-note":{if(!armed(b))break;const n=S.notes.find(x=>x.id===id);if(!n)break;const copy=Object.assign({},n);delete copy.id;
       store.del("notes",id);closeSheet();toast("Note deleted",{label:"Undo",fn:()=>enqueue({op:"add",coll:"notes",id,data:copy})});break;}
     case"goal-done":{const n=S.notes.find(x=>x.id===id);if(n)store.update("notes",id,{done:!n.done});if(n&&n.done)toast("Goal done. Nice work!");break;}
-    case"open-kata":closeSheet();tab="kata";LS.set("tab","kata");kataOpen=v;render();window.scrollTo(0,0);break;
-    case"kata-back":kataOpen=null;render();break;
+    case"open-kata":closeSheet();kiaiOpen=false;tab="kata";LS.set("tab","kata");kataOpen=v;render();window.scrollTo(0,0);break;
+    case"kata-back":kataOpen=null;kiaiOpen=false;render();break;
     case"kstatus":{const info=kataInfo(kataOpen);upsertKata(kataOpen,{status:info&&info.status===v?"":v});break;}
     case"kiai":{const info=kataInfo(kataOpen);const cur=info&&info.kiais!=null?info.kiais:0;upsertKata(kataOpen,{kiais:Math.max(0,cur+Number(v))});break;}
     case"edit-rem":openSheet({type:"rem",name:kataOpen});break;
+    case"kiai-toggle":kiaiOpen=!kiaiOpen;render();break;
+    case"edit-kiai":openSheet({type:"kiai",name:kataOpen});break;
     case"theme":THEME=v;LS.set("theme",v);applyTheme();render();renderSheet();break;
     case"access":store.update("access",id,{status:v});break;
     case"signout":signOut();break;
@@ -659,6 +686,11 @@ document.addEventListener("click",e=>{
 document.addEventListener("submit",e=>{
   e.preventDefault();
   if(e.target.id==="noteForm")saveNote(e.target);
+  if(e.target.id==="kiaiForm"){
+    const fd=new FormData(e.target),info=kataInfo(sheet.name)||{},n=info.kiais||0,old=kiaiNotes(info);
+    const out=old.slice();for(let i=0;i<n;i++)out[i]=String(fd.get("k"+i)||"").replace(/\s+/g," ").trim();
+    while(out.length&&!out[out.length-1].trim())out.pop();
+    upsertKata(sheet.name,{kiaiNotes:out.join("\n")});closeSheet();toast("Kiai notes saved");}
   if(e.target.id==="remForm"){const txt=String(new FormData(e.target).get("rem")||"").split("\n").map(s=>s.trim()).filter(Boolean).join("\n");upsertKata(sheet.name,{reminders:txt});closeSheet();}
 });
 document.addEventListener("input",e=>{

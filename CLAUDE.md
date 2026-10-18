@@ -9,8 +9,8 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 | Piece | Location |
 | --- | --- |
 | Live app | https://karateka-companion.pages.dev/ (Cloudflare Pages from `main`) |
-| Database | Google Sheet **Karate-Ka Companion**. Tabs: Notes, My kata, Access |
-| Backend | Apps Script bound to the sheet; source is `Code.gs` here |
+| Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, My kata, Access |
+| Backend | Apps Script project "Karate-Ka Companion" bound to the sheet; source is `Code.gs` here. Web app version 1 (Execute as Gary, access Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the dojo Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
 | Setup guide | `SETUP.md` |
 

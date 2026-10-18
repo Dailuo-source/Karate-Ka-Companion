@@ -15,7 +15,7 @@
 
 const APP_NAME = 'Karate-Ka Companion';
 // Where the app lives. Shown on the web app page and in emails.
-const APP_SITE = 'https://karateka-companion.pages.dev/';
+const APP_SITE = 'https://karate-ka-companion.pages.dev/';
 // The dojo's Kata Tracker sheet: its "Kata" tab supplies the kata names, order and translations.
 const KATA_TRACKER_SHEET_ID = '1QYVdiW5kZ5j-EvSQzZJ-GE12ZqwY2OUgTsSIzIloiHk';
 const KATA_TAB = 'Kata';

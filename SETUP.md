@@ -1,7 +1,7 @@
 # Karate-Ka Companion setup
 
 Karate-Ka Companion keeps your notes in your own Google Sheet. The app is hosted on Cloudflare Pages at
-`https://karateka-companion.pages.dev/`. Only your Google account can open it; anyone else has to ask you.
+`https://karate-ka-companion.pages.dev/`. Only your Google account can open it; anyone else has to ask you.
 
 ## 1. The Google Sheet (on a computer)
 
@@ -20,7 +20,7 @@ Karate-Ka Companion keeps your notes in your own Google Sheet. The app is hosted
 2. **Google Auth Platform → Branding**: app name Karate-Ka Companion, your email, then **Audience → External**
    and **Publish app** (only the basic name/email scopes are used, so no review is needed).
 3. **Clients → Create client → Web application**. Authorised JavaScript origin:
-   `https://karateka-companion.pages.dev`. Copy the client ID.
+   `https://karate-ka-companion.pages.dev`. Copy the client ID.
 4. In the sheet: **Karate-Ka Companion → Set Google sign-in client ID…** and paste it.
 5. Put the client ID and the `/exec` URL into `CLIENT_ID` and `API_URL` at the top of the script in `index.html`.
 
@@ -31,7 +31,7 @@ Karate-Ka Companion keeps your notes in your own Google Sheet. The app is hosted
 
 ## 4. Phone
 
-Open `https://karateka-companion.pages.dev/` in Chrome, **Continue with Google**, then
+Open `https://karate-ka-companion.pages.dev/` in Chrome, **Continue with Google**, then
 **⋮ → Add to Home screen → Install**.
 
 ## Later

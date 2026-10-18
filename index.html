@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#131528">
+<meta name="color-scheme" content="dark light">
+<title>Karate-Ka Companion</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon-64.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap">
+<script>try{var t=localStorage.getItem("kc.theme");if(t==="light")document.documentElement.dataset.theme="light";}catch(e){}</script>
+<style>
+/* Karate-Ka Companion: one-column phone app. Starts dark; light is a choice in the account panel.
+   Palette: midnight navy ground, periwinkle accent, blush cheeks, and a soft tint per note type. */
+:root{--f:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;--navh:72px}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#131528;--surface:#1E2140;--sunk:#282C4F;--ink:#EEF0FA;--muted:#A9AECB;--line:#2F3459;
+  --accent:#8C9BFF;--accent-ink:#121535;--hero:#262B57;--hero-ink:#EEF0FA;--hero-muted:#B8BEE6;
+  --head:#E86A86;--danger:#FF8F8F;--ok:#86E0B5;--ring:rgba(140,155,255,.65);--scrim:rgba(5,6,15,.66);
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.40);
+  --kata-f:#262E63;--kata-i:#B4BEFF;--kihon-f:#45321A;--kihon-i:#FFC979;--kumite-f:#4A1F2E;--kumite-i:#FF9DB3;
+  --sensei-f:#173D30;--sensei-i:#86E0B5;--goals-f:#382556;--goals-i:#D3A8FF;--general-f:#2A2E48;--general-i:#C9CDE0}
+:root[data-theme="light"]{color-scheme:light;
+  --bg:#F2F3F7;--surface:#FFFFFF;--sunk:#E8EAF1;--ink:#1E2235;--muted:#5B6075;--line:#E1E4EE;
+  --accent:#3B4BA8;--accent-ink:#FFFFFF;--hero:#1E2235;--hero-ink:#FFFFFF;--hero-muted:#C9CEE6;
+  --head:#D9485F;--danger:#C0392B;--ok:#1F6B48;--ring:rgba(59,75,168,.45);--scrim:rgba(20,24,40,.45);
+  --shadow:0 1px 2px rgba(30,34,53,.06),0 8px 24px rgba(30,34,53,.10);
+  --kata-f:#E6E9FB;--kata-i:#2F3C8F;--kihon-f:#FFF0D9;--kihon-i:#7A4A00;--kumite-f:#FDE4EA;--kumite-i:#9A2645;
+  --sensei-f:#E2F4EC;--sensei-i:#1F6B48;--goals-f:#F1E6FB;--goals-i:#643592;--general-f:#E4E6EE;--general-i:#3A3F55}
+.t-kata{--tf:var(--kata-f);--ti:var(--kata-i)} .t-kihon{--tf:var(--kihon-f);--ti:var(--kihon-i)}
+.t-kumite{--tf:var(--kumite-f);--ti:var(--kumite-i)} .t-sensei{--tf:var(--sensei-f);--ti:var(--sensei-i)}
+.t-goals{--tf:var(--goals-f);--ti:var(--goals-i)} .t-general{--tf:var(--general-f);--ti:var(--general-i)}
+
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);-webkit-tap-highlight-color:transparent}
+body{min-height:100dvh;transition:background-color .2s ease}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none;padding:0}
+button:disabled{cursor:default;opacity:.55}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#app{max-width:560px;margin:0 auto;padding-bottom:calc(var(--navh) + 110px + env(safe-area-inset-bottom))}
+
+/* tap feedback: dip while held, then a ring pulses out */
+button,.tile span,.pillr span{transition:transform .12s ease,filter .12s ease,background-color .15s ease}
+.tapping{transform:scale(.95);filter:brightness(1.2)}
+.tapped{animation:ring .45s ease-out}
+@keyframes ring{0%{box-shadow:0 0 0 0 var(--ring)}100%{box-shadow:0 0 0 12px rgba(0,0,0,0)}}
+
+/* header */
+.top{display:flex;align-items:center;gap:10px;padding:calc(18px + env(safe-area-inset-top)) 18px 8px}
+.top .ttl{flex:1;min-width:0}
+.top h1{margin:0;font-size:21px;font-weight:900;letter-spacing:-.2px;line-height:1.1}
+.sub{font-size:13px;font-weight:700;color:var(--muted)}
+.sync.bad{color:var(--danger)}
+.ibtn{width:44px;height:44px;border-radius:14px;background:var(--surface);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);flex-shrink:0}
+.ibtn svg{width:22px;height:22px}
+.avatar{font-weight:900;font-size:17px;color:var(--accent)}
+
+.pad{padding:0 18px}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:16px;padding:0 14px;height:46px;margin:6px 18px 0}
+.search input{border:none;outline:none;background:transparent;font-size:15px;font-weight:600;flex:1;min-width:0;height:100%}
+.search svg{width:18px;height:18px;color:var(--muted);flex-shrink:0}
+.chips{display:flex;gap:8px;padding:12px 18px 4px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;height:38px;padding:0 15px;border-radius:19px;background:var(--tf,var(--surface));color:var(--ti,var(--ink));font-size:14px;font-weight:800;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.row{display:flex;align-items:center;gap:8px}
+.grow{flex:1}
+.sbtn{height:40px;padding:0 12px;border-radius:14px;background:var(--surface);display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:800}
+.sbtn svg{width:18px;height:18px}
+
+.list{display:flex;flex-direction:column;gap:12px;padding:12px 18px 0}
+.dhead{margin:6px 0 -4px;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;text-transform:uppercase}
+.note{display:flex;gap:12px;width:100%;text-align:left;background:var(--surface);border-radius:20px;padding:14px;box-shadow:var(--shadow)}
+.ico{width:44px;height:44px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--tf);color:var(--ti)}
+.ico svg{width:32px;height:32px}
+.nbody{flex:1;min-width:0;display:block}
+.meta{display:block;font-size:12px;font-weight:800;color:var(--muted)}
+.meta b{color:var(--ti);font-weight:900}
+.ntitle{display:block;font-size:16px;font-weight:800;margin-top:2px}
+.nsnip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
+.pin{width:16px;height:16px;color:var(--accent);flex-shrink:0;margin-top:2px}
+
+.hero{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--hero);color:var(--hero-ink);border-radius:22px;padding:14px 16px}
+.hero .lbl{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--hero-muted)}
+.hero .big{font-size:17px;font-weight:800}
+.hero svg.star{width:40px;height:40px;flex-shrink:0}
+.heroes{display:flex;flex-direction:column;gap:8px;padding:12px 18px 0}
+
+.empty{text-align:center;padding:40px 24px;color:var(--muted);font-weight:700}
+.empty svg{width:96px;height:96px;display:block;margin:0 auto 12px}
+
+/* bottom nav + add button */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.nav .in{max-width:560px;margin:0 auto;display:flex;justify-content:space-around;height:var(--navh)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:72px;font-size:12px;font-weight:800;color:var(--muted);border-radius:16px}
+.tab svg{width:24px;height:24px}
+.tab[aria-selected="true"]{color:var(--accent)}
+.fab{position:fixed;z-index:6;right:max(18px,calc(50vw - 262px));bottom:calc(var(--navh) + 20px + env(safe-area-inset-bottom));width:62px;height:62px;border-radius:22px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.fab svg{width:28px;height:28px}
+
+/* kata */
+.krow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border-radius:18px;padding:12px 14px;min-height:64px}
+.knum{width:30px;font-size:13px;font-weight:900;color:var(--muted);text-align:center;flex-shrink:0}
+.kname{display:block;font-size:16px;font-weight:800}
+.ken{display:block;font-size:13px;font-weight:600;color:var(--muted)}
+.badges{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.badge{font-size:12px;font-weight:800;border-radius:9px;padding:2px 8px;background:var(--sunk);color:var(--muted)}
+.badge.s-Learning{background:var(--kihon-f);color:var(--kihon-i)}
+.badge.s-Polishing{background:var(--kata-f);color:var(--kata-i)}
+.badge.s-Solid{background:var(--sensei-f);color:var(--sensei-i)}
+.khero{margin:6px 18px 0;background:var(--kata-f);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.khero h1{margin:0;font-size:26px;font-weight:900;line-height:1.1}
+.khero .en{font-size:14px;font-weight:700;color:var(--kata-i)}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:var(--surface);border-radius:16px;padding:4px}
+.seg button{height:40px;border-radius:12px;font-size:14px;font-weight:800;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.kiai{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:16px;padding:8px 8px 8px 12px}
+.kiai .n{font-size:24px;font-weight:900;line-height:1.1}
+.kiai svg{width:34px;height:34px;flex-shrink:0}
+.step{width:44px;height:44px;border-radius:14px;background:var(--sunk);font-size:24px;font-weight:900}
+.step.plus{background:var(--accent);color:var(--accent-ink)}
+.box{margin:14px 18px 0;background:var(--surface);border-radius:20px;padding:14px 16px}
+.box h2,.h2{margin:0 0 8px;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;text-transform:uppercase}
+.rem{display:flex;gap:10px;align-items:flex-start;font-size:15px;font-weight:700;padding:3px 0}
+.rem i{width:8px;height:8px;border-radius:4px;background:#F4A6B5;margin-top:7px;flex-shrink:0}
+.tl{display:flex;gap:12px}
+.tl .rail{display:flex;flex-direction:column;align-items:center;width:14px}
+.tl .dot{width:14px;height:14px;border-radius:7px;background:var(--ti);border:3px solid var(--bg);margin-top:4px}
+.tl .line{flex:1;width:2px;background:var(--line)}
+.tl button{flex:1;text-align:left;padding-bottom:14px;min-width:0}
+.tag{display:inline-block;border-radius:8px;padding:1px 8px;margin-left:6px;background:var(--tf);color:var(--ti)}
+.backrow{display:flex;align-items:center;gap:8px;padding:calc(16px + env(safe-area-inset-top)) 18px 8px}
+
+/* goals */
+.goal{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:18px;padding:12px}
+.check{width:44px;height:44px;border-radius:14px;background:var(--goals-f);color:var(--goals-i);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.check svg{width:24px;height:24px}
+.check[aria-pressed="true"]{background:var(--sensei-f);color:var(--sensei-i)}
+.goal .nbody{text-align:left;padding-top:2px}
+.goal.done .ntitle{text-decoration:line-through;color:var(--muted)}
+
+/* panels */
+#sheetWrap{position:fixed;inset:0;z-index:20;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
+#sheetWrap[hidden]{display:none}
+.sheet{width:100%;max-width:560px;max-height:92dvh;overflow:auto;background:var(--bg);border-radius:26px 26px 0 0;padding:14px 18px calc(24px + env(safe-area-inset-bottom));animation:up .2s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.6}}
+.shead{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.shead h2{flex:1;margin:0;font-size:20px;font-weight:900}
+.btn{height:48px;padding:0 20px;border-radius:15px;font-size:16px;font-weight:800;background:var(--surface);display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--danger)}
+.btn.wide{width:100%}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btns .btn{flex:1 1 0}
+.btns.col{flex-direction:column}
+.btns.col .btn{flex:none}
+.field{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.field>span,.legend{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.3px}
+.inp{width:100%;border:none;outline:none;background:var(--surface);border-radius:14px;padding:12px 14px;font-size:16px;font-weight:700}
+textarea.inp{resize:vertical;min-height:120px;line-height:1.45;font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tile input,.pillr input{position:absolute;opacity:0;pointer-events:none}
+.tile span{height:66px;border-radius:18px;border:2.5px solid transparent;background:var(--tf);color:var(--ti);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;font-weight:800}
+.tile span svg{width:28px;height:28px}
+.tile input:checked+span{border-color:var(--ti)}
+.tile input:focus-visible+span,.pillr input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pillr span{display:inline-flex;align-items:center;height:42px;padding:0 16px;border-radius:21px;border:2px solid var(--line);background:var(--surface);font-size:14px;font-weight:800}
+.pillr input:checked+span{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.swrow{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:16px;padding:12px 14px;margin-top:14px;font-weight:800}
+.swrow input{width:22px;height:22px;accent-color:var(--accent)}
+.view-body{white-space:pre-wrap;font-size:16px;font-weight:600;line-height:1.5;margin-top:10px}
+.opt{display:flex;align-items:center;width:100%;min-height:52px;padding:0 14px;border-radius:14px;background:var(--surface);font-weight:800;margin-top:8px;text-align:left}
+.opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.acc{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:14px;padding:10px 12px;margin-top:8px}
+.acc .em{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:700;font-size:14px}
+.mini{height:36px;padding:0 12px;border-radius:11px;background:var(--sunk);font-size:13px;font-weight:800}
+.mini.yes{background:var(--sensei-f);color:var(--sensei-i)}
+
+/* sign-in and no-access */
+.auth{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:calc(90px + env(safe-area-inset-top)) 28px 40px;gap:16px;text-align:center}
+.auth svg.m{width:132px;height:132px}
+.auth h1{margin:0;font-size:27px;font-weight:900}
+.auth p{margin:0;font-size:15px;font-weight:600;color:var(--muted);line-height:1.45}
+.auth .note{max-width:360px;display:flex;gap:10px;text-align:left;background:var(--kata-f);color:var(--kata-i);border-radius:16px;padding:12px 14px;font-size:14px;font-weight:700;box-shadow:none}
+.auth .note svg{width:20px;height:20px;flex-shrink:0}
+#gbtn{min-height:44px;display:flex;justify-content:center;width:100%;max-width:340px}
+
+.toast{position:fixed;z-index:30;left:50%;transform:translateX(-50%);bottom:calc(var(--navh) + 96px + env(safe-area-inset-bottom));width:calc(100% - 36px);max-width:520px;background:var(--ink);color:var(--bg);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-weight:700;box-shadow:var(--shadow)}
+.toast[hidden]{display:none}
+.toast .grow{font-size:14px}
+.toast button{color:var(--bg);font-weight:900;text-decoration:underline;min-height:36px;padding:0 6px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="sheetWrap" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script>
+(function(){
+"use strict";
+
+/* =====================================================================
+   CONFIG. Filled in after deploying (see SETUP.md). A link like
+   …/#api=<web app url>&client=<client id> also sets them on one phone.
+   ===================================================================== */
+const API_URL = "";
+const CLIENT_ID = "";
+const KATA_SITE = "https://dailuo-source.github.io/SKA-Kata-Tracker/";
+
+const TYPES=[{k:"Kata",c:"kata",s:"Kata"},{k:"Kihon",c:"kihon",s:"Kihon"},{k:"Kumite",c:"kumite",s:"Kumite"},
+  {k:"Sensei says",c:"sensei",s:"Sensei says"},{k:"Goals",c:"goals",s:"Goals"},{k:"General",c:"general",s:"General"}];
+const FROM=[{k:"Me",s:"My own note"},{k:"Sensei",s:"Sensei"},{k:"Seminar",s:"Seminar"}];
+const STATUSES=["Learning","Polishing","Solid"];
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const eqi=(a,b)=>String(a==null?"":a).trim().toLowerCase()===String(b==null?"":b).trim().toLowerCase();
+const LS={get(k,d){try{const v=localStorage.getItem("kc."+k);return v==null?d:v;}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem("kc."+k,v);}catch(e){}},del(k){try{localStorage.removeItem("kc."+k);}catch(e){}}};
+const typeOf=k=>TYPES.find(t=>eqi(t.k,k))||TYPES[5];
+
+/* ---------- dates ---------- */
+const pad=n=>String(n).padStart(2,"0");
+const dayKey=ms=>{const d=new Date(ms);return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());};
+const todayKey=()=>dayKey(Date.now());
+const keyDate=k=>{const p=k.split("-").map(Number);return new Date(p[0],p[1]-1,p[2]||1,12);};
+const shiftDay=(k,n)=>{const d=keyDate(k);d.setDate(d.getDate()+n);return dayKey(d.getTime());};
+const fmtDay=(k,long)=>{const o={weekday:long?"long":"short",month:"short",day:"numeric"};if(k.slice(0,4)!==todayKey().slice(0,4))o.year="numeric";return keyDate(k).toLocaleDateString([],o);};
+const relDay=k=>k===todayKey()?"Today · "+fmtDay(k):k===shiftDay(todayKey(),-1)?"Yesterday · "+fmtDay(k):fmtDay(k);
+const fmtMonth=m=>keyDate(m+"-01").toLocaleDateString([],{month:"long",year:"numeric"});
+
+/* ---------- kawaii icons ---------- */
+const FACE=(y,gap)=>`<circle cx="${16-gap}" cy="${y}" r="1.4" fill="#1E2235"/><circle cx="${16+gap}" cy="${y}" r="1.4" fill="#1E2235"/><ellipse cx="${16-gap-2.2}" cy="${y+3}" rx="1.6" ry="1" fill="#F4A6B5"/><ellipse cx="${16+gap+2.2}" cy="${y+3}" rx="1.6" ry="1" fill="#F4A6B5"/><path d="M14.8 ${y+2.6} Q16 ${y+3.8} 17.2 ${y+2.6}" fill="none" stroke="#1E2235" stroke-width="1.2" stroke-linecap="round"/>`;
+const ICONS={
+  kata:`<rect x="7" y="6" width="18" height="20" rx="3" fill="#fff" stroke="currentColor" stroke-width="1.8"/><rect x="5" y="4" width="22" height="4" rx="2" fill="#7C89D9" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="24" width="22" height="4" rx="2" fill="#7C89D9" stroke="currentColor" stroke-width="1.5"/>${FACE(15,3)}`,
+  kihon:`<circle cx="16" cy="17" r="10" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M6.5 13.5h19" stroke="#1E2235" stroke-width="3"/><path d="M16 13.5l-3.5 6.5M16 13.5l3.5 6.5" stroke="#1E2235" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="10.5" r="1.3" fill="#1E2235"/><circle cx="20" cy="10.5" r="1.3" fill="#1E2235"/><ellipse cx="9.5" cy="18" rx="1.5" ry="1" fill="#F4A6B5"/><ellipse cx="22.5" cy="18" rx="1.5" ry="1" fill="#F4A6B5"/>`,
+  kumite:`<path d="M9 12a7 7 0 0 1 14 0v8a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5z" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M9 15a3 3 0 0 0-3 3 3 3 0 0 0 3 3" fill="#fff" stroke="currentColor" stroke-width="1.8"/><rect x="10" y="24" width="12" height="4" rx="1.5" fill="#E86A86" stroke="currentColor" stroke-width="1.5"/>${FACE(15,2.6).replace(/cx="16"/g,'cx="16.5"')}`,
+  sensei:`<path d="M6 7h20a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H15l-5 4v-4H6a3 3 0 0 1-3-3V10a3 3 0 0 1 3-3z" fill="#fff" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>${FACE(14,3)}`,
+  goals:`<path d="M16 3.5l3.6 7.7 8.4.8-6.4 5.6 2 8.4L16 21.6 8.4 26l2-8.4L4 12l8.4-.8z" fill="#FFD66B" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>${FACE(14.5,2.6)}`,
+  general:`<rect x="7" y="6" width="18" height="22" rx="3" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M11 4v5M16 4v5M21 4v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>${FACE(16,3)}`
+};
+const icon=c=>`<svg viewBox="0 0 32 32" aria-hidden="true">${ICONS[c]||ICONS.general}</svg>`;
+function mascot(mood){
+  const eyes=mood==="stern"?`<path d="M17.8 23.5l3.4 1.8M30.2 23.5l-3.4 1.8" stroke="#1E2235" stroke-width="1.4" stroke-linecap="round"/><circle cx="19.5" cy="26" r="1.5" fill="#1E2235"/><circle cx="28.5" cy="26" r="1.5" fill="#1E2235"/>`
+    :mood==="sleepy"?`<path d="M17.5 25q2 1.6 4 0M26.5 25q2 1.6 4 0" fill="none" stroke="#1E2235" stroke-width="1.3" stroke-linecap="round"/>`
+    :`<circle cx="19.5" cy="25" r="1.8" fill="#1E2235"/><circle cx="28.5" cy="25" r="1.8" fill="#1E2235"/><circle cx="20.1" cy="24.4" r=".6" fill="#fff"/><circle cx="29.1" cy="24.4" r=".6" fill="#fff"/>`;
+  const mouth=mood==="stern"?`<path d="M22.3 29h3.4" stroke="#1E2235" stroke-width="1.3" stroke-linecap="round"/>`:`<path d="M22.3 27.4q1.7 2.2 3.4 0" fill="none" stroke="#1E2235" stroke-width="1.3" stroke-linecap="round"/>`;
+  return `<svg class="m" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5c5 0 21 28 19 33s-36 5-38 0S19 5 24 5z" fill="#fff" stroke="#1E2235" stroke-width="1.6"/><path d="M13 17q11-4 22 0l1.5 3.5q-12.5-4-25 0z" style="fill:var(--head)"/><path d="M35 18l6-3-2 6z" style="fill:var(--head)"/><rect x="17" y="31" width="14" height="10" rx="2" fill="#1E2235"/>${eyes}<ellipse cx="15.5" cy="28.3" rx="2.4" ry="1.4" fill="#F4A6B5"/><ellipse cx="32.5" cy="28.3" rx="2.4" ry="1.4" fill="#F4A6B5"/>${mouth}</svg>`;
+}
+const KIAI=`<svg viewBox="0 0 34 34" aria-hidden="true"><path d="M17 2l3 8 8-4-4 8 8 3-8 3 4 8-8-4-3 8-3-8-8 4 4-8-8-3 8-3-4-8 8 4z" fill="#FFD66B" stroke="#1E2235" stroke-width="1.4" stroke-linejoin="round"/><circle cx="14.5" cy="16" r="1.3" fill="#1E2235"/><circle cx="19.5" cy="16" r="1.3" fill="#1E2235"/><ellipse cx="17" cy="20" rx="2" ry="1.6" fill="#1E2235"/></svg>`;
+const SVG=(d,w)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w||2.2}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const I={
+  search:SVG('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>'),
+  plus:SVG('<path d="M12 5v14M5 12h14"/>',2.8),
+  back:SVG('<path d="M15 6l-6 6 6 6"/>',2.4),
+  right:SVG('<path d="M9 6l6 6-6 6"/>',2.4),
+  down:SVG('<path d="M6 9l6 6 6-6"/>',2.6),
+  cal:SVG('<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>'),
+  sort:SVG('<path d="M7 4v16M3 16l4 4 4-4M14 6h7M14 11h5M14 16h3"/>'),
+  notes:SVG('<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/>'),
+  kata:SVG('<rect x="5" y="5" width="14" height="15" rx="2"/><path d="M3 4h18M3 21h18"/>'),
+  star:SVG('<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>'),
+  check:SVG('<path d="M5 12.5l4.5 4.5L19 7"/>',3),
+  pin:SVG('<path d="M9 4h6l-1 6 4 3v2H6v-2l4-3z"/><path d="M12 15v6"/>'),
+  ext:SVG('<path d="M7 17L17 7M9 7h8v8"/>',2.4),
+  lock:SVG('<rect x="5" y="11" width="14" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+  close:SVG('<path d="M6 6l12 12M18 6L6 18"/>',2.4),
+  video:SVG('<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>')
+};
+
+/* ---------- state ---------- */
+let API=LS.get("api","")||API_URL, CLIENT=LS.get("client","")||CLIENT_ID;
+let SESSION=LS.get("session",""), ROLE=LS.get("role",""), EMAIL=LS.get("email",""), THEME=LS.get("theme","dark");
+let S={notes:[],kata:[],access:[],kataList:[]};
+let auth="signin", ready=false, noAccess={email:"",requested:false}, setupMsg="";
+let queue=[],inflight=false,flushT=0,retryT=0,lastSync=0,syncState="",sheetUrl=LS.get("sheet","");
+let tab=LS.get("tab","notes"), typeF="All", q="", dateF="all", sortNew=LS.get("sort","new")!=="old";
+let kataOpen=null, kq="", sheet=null, lastFocus=null;
+
+function readLinkParams(){
+  try{
+    const h=new URLSearchParams((location.hash||"").replace(/^#/,""));
+    const api=h.get("api"),cid=h.get("client");
+    if(api&&/^https:\/\/script\.google\.com\//.test(api)){API=api;LS.set("api",api);}
+    if(cid&&/\.apps\.googleusercontent\.com$/.test(cid)){CLIENT=cid;LS.set("client",cid);}
+    const k=new URLSearchParams(location.search).get("kata");
+    if(k){tab="kata";kataOpen=k;}
+    if(api||cid||k)history.replaceState(null,"",location.pathname);
+  }catch(e){}
+}
+
+function normalize(st){
+  st=st||{};const str=v=>String(v==null?"":v).trim();
+  return{
+    notes:(st.notes||[]).map(r=>Object.assign({},r,{type:typeOf(r.type).k,date:+r.date||+r.added||Date.now(),added:+r.added||0,
+      title:str(r.title),note:String(r.note==null?"":r.note),kata:str(r.kata),from:FROM.find(f=>eqi(f.k,r.from))?FROM.find(f=>eqi(f.k,r.from)).k:"Me",
+      video:str(r.video),pinned:!!r.pinned,done:!!r.done})),
+    kata:(st.kata||[]).map(r=>Object.assign({},r,{kata:str(r.kata),status:STATUSES.find(s=>eqi(s,r.status))||"",kiais:r.kiais==null||r.kiais===""?null:+r.kiais,reminders:String(r.reminders==null?"":r.reminders)})),
+    access:(st.access||[]).map(r=>Object.assign({},r,{email:str(r.email),status:str(r.status)||"Requested"})),
+    kataList:Array.isArray(st.kataList)?st.kataList:[]
+  };
+}
+function saveCache(){try{LS.set("state",JSON.stringify(S));LS.set("role",ROLE);LS.set("email",EMAIL);}catch(e){}}
+function loadCache(){try{const s=LS.get("state","");if(s){S=normalize(JSON.parse(s));return true;}}catch(e){}return false;}
+
+/* ---------- sync with the sheet ---------- */
+function callApi(payload){return fetch(API,{method:"POST",body:JSON.stringify(payload),redirect:"follow"}).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json();});}
+const uid=()=>("x"+Date.now().toString(36)+Math.random().toString(36).slice(2,9));
+function applyLocal(o){const arr=S[o.coll];if(!arr)return;
+  if(o.op==="add"){const rec=Object.assign({id:o.id},o.data);const i=arr.findIndex(d=>d.id===o.id);if(i>=0)arr[i]=rec;else arr.push(rec);}
+  else if(o.op==="update"){const x=arr.find(d=>d.id===o.id);if(x)Object.assign(x,o.data);}
+  else S[o.coll]=arr.filter(d=>d.id!==o.id);}
+function enqueue(o){if(ROLE!=="owner"){toast("You can look, but only the owner can change notes.");return;}
+  queue.push(o);applyLocal(o);saveCache();onData();clearTimeout(flushT);flushT=setTimeout(flush,350);}
+const store={
+  add(c,data){const id=uid();enqueue({op:"add",coll:c,id,data});return id;},
+  update(c,id,data){enqueue({op:"update",coll:c,id,data});},
+  del(c,id){enqueue({op:"del",coll:c,id});}
+};
+async function flush(){
+  if(auth!=="ok"||!SESSION||!API)return;
+  if(inflight){clearTimeout(flushT);flushT=setTimeout(flush,400);return;}
+  clearTimeout(retryT);
+  const ops=queue.slice();inflight=true;setSync(ops.length?"saving":ready?"loading":"connecting");
+  let res;
+  try{res=await callApi({session:SESSION,ops});}catch(e){res={ok:false,error:"network"};}
+  inflight=false;
+  handle(res,ops.length);
+}
+function handle(res,n){
+  if(res&&res.ok){
+    queue=queue.slice(n);
+    if(res.session){SESSION=res.session;LS.set("session",SESSION);}
+    ROLE=res.role;EMAIL=res.email||EMAIL;
+    if(res.sheetUrl){sheetUrl=res.sheetUrl;LS.set("sheet",sheetUrl);}
+    S=normalize(res.state);queue.forEach(applyLocal);saveCache();
+    const was=auth;auth="ok";const first=!ready;ready=true;lastSync=Date.now();setSync("ok");
+    if(first||was!=="ok")render();else onData();
+    if(queue.length){clearTimeout(flushT);flushT=setTimeout(flush,350);}
+    return;
+  }
+  const err=res&&res.error;
+  if(err==="signed_out"){signOut(res.message);return;}
+  if(err==="no_access"){
+    if(res.session){SESSION=res.session;LS.set("session",SESSION);}
+    noAccess={email:res.email||"",requested:!!res.requested};wipeLocal();auth="noaccess";closeSheet();render();return;}
+  if(err==="not_setup"){auth="setup";setupMsg=res.message||"";render();return;}
+  if(err==="read_only"){queue=[];toast(res.message);setTimeout(flush,100);return;}
+  setSync("error");
+  if(auth!=="ok"){toast(res&&res.message&&err!=="network"?res.message:"Can't reach your notes right now. Check your connection and try again.");render();return;}
+  if(res&&res.message&&err!=="network")toast(res.message);
+  else toast(n?"Can't reach your sheet. Your notes will save when you're back online.":"Can't reach your sheet. Tap the status to retry.");
+  retryT=setTimeout(flush,15000);
+}
+function setSync(s){syncState=s;const el=$("#sync");if(!el)return;
+  const t={connecting:"Connecting…",loading:"Refreshing…",saving:"Saving…",ok:"Synced "+new Date(lastSync).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),error:"Offline · tap to retry"}[s]||"";
+  el.textContent=ROLE==="viewer"?"View only · "+t:t;el.classList.toggle("bad",s==="error");}
+document.addEventListener("visibilitychange",()=>{if(document.hidden||auth!=="ok")return;if(Date.now()-lastSync>15000)flush();});
+setInterval(()=>{if(!document.hidden&&auth==="ok"&&!queue.length&&!inflight&&Date.now()-lastSync>60000)flush();},20000);
+window.addEventListener("beforeunload",e=>{if(queue.length){e.preventDefault();e.returnValue="";}});
+
+/* ---------- Google sign-in ---------- */
+let gisReady=false,signingIn=false;
+function loadGis(){
+  if(gisReady||!CLIENT)return;
+  if(window.google&&google.accounts&&google.accounts.id){initGis();return;}
+  if(document.getElementById("gsi"))return;
+  const s=document.createElement("script");s.id="gsi";s.src="https://accounts.google.com/gsi/client";s.async=true;s.onload=initGis;
+  s.onerror=()=>{const el=$("#gbtn");if(el)el.innerHTML='<p>Couldn\'t load Google sign-in. Check your connection.</p>';};
+  document.head.appendChild(s);
+}
+function initGis(){
+  if(gisReady||!window.google||!google.accounts)return;
+  google.accounts.id.initialize({client_id:CLIENT,callback:r=>signIn(r.credential),auto_select:true,use_fedcm_for_prompt:true,itp_support:true,cancel_on_tap_outside:false});
+  gisReady=true;drawGis();
+}
+function drawGis(){
+  const el=$("#gbtn");if(!el||!gisReady)return;el.innerHTML="";
+  google.accounts.id.renderButton(el,{theme:THEME==="dark"?"filled_black":"outline",size:"large",shape:"pill",text:"continue_with",logo_alignment:"left",width:Math.min(320,el.clientWidth||320)});
+  if(auth==="signin"&&!LS.get("signedOut",""))try{google.accounts.id.prompt();}catch(e){}
+}
+async function signIn(tok){
+  if(!tok||signingIn)return;signingIn=true;LS.del("signedOut");
+  const el=$("#gbtn");if(el)el.insertAdjacentHTML("afterend",'<p id="signing">Signing you in…</p>');
+  let res;try{res=await callApi({idToken:tok});}catch(e){res={ok:false,error:"network"};}
+  signingIn=false;const sg=$("#signing");if(sg)sg.remove();
+  handle(res,0);
+}
+function wipeLocal(){queue=[];S={notes:[],kata:[],access:[],kataList:[]};ready=false;["state","role","email","sheet"].forEach(LS.del);ROLE="";}
+function signOut(msg){
+  SESSION="";LS.del("session");wipeLocal();EMAIL="";auth="signin";LS.set("signedOut","1");closeSheet();
+  try{if(window.google&&google.accounts)google.accounts.id.disableAutoSelect();}catch(e){}
+  render();if(msg)toast(msg);
+}
+
+/* ---------- helpers on the data ---------- */
+const kataInfo=name=>S.kata.find(r=>eqi(r.kata,name));
+function upsertKata(name,data){const r=kataInfo(name);if(r)store.update("kata",r.id,data);else store.add("kata",Object.assign({kata:name},data));}
+function kataNames(){
+  const out=[],seen={};
+  const push=(name,en,order)=>{const k=name.toLowerCase();if(!name||seen[k])return;seen[k]=1;out.push({name,en:en||"",order:order==null?999:order});};
+  S.kataList.forEach(k=>push(String(k.name||"").trim(),k.en,k.order));
+  S.kata.forEach(k=>push(k.kata));S.notes.forEach(n=>push(n.kata));
+  return out;
+}
+const kataEn=name=>{const k=S.kataList.find(x=>eqi(x.name,name));return k?k.en:"";};
+const noteTitle=n=>n.title||(n.kata&&n.type==="Kata"?n.kata:"")||String(n.note||"").split("\n")[0].slice(0,60)||"Untitled note";
+const byDate=(a,b)=>(a.date-b.date)||((a.added||0)-(b.added||0));
+const DATE_OPTS=[["all","All dates"],["week","Last 7 days"],["month","This month"],["3m","Last 3 months"]];
+const dateLabel=()=>{const o=DATE_OPTS.find(x=>x[0]===dateF);return o?o[1]:fmtMonth(dateF);};
+function inDate(n){const k=dayKey(n.date),t=todayKey();
+  if(dateF==="all")return true;if(dateF==="week")return k>=shiftDay(t,-6)&&k<=t;
+  if(dateF==="month")return k.slice(0,7)===t.slice(0,7);if(dateF==="3m")return k>=shiftDay(t,-89);
+  return k.slice(0,7)===dateF;}
+function filtered(){
+  const qq=q.trim().toLowerCase();
+  return S.notes.filter(n=>(typeF==="All"||n.type===typeF)&&inDate(n)&&(!qq||[n.title,n.note,n.kata,n.type,n.from].join(" ").toLowerCase().includes(qq)))
+    .sort((a,b)=>sortNew?byDate(b,a):byDate(a,b));
+}
+
+/* ---------- screens ---------- */
+function applyTheme(){document.documentElement.dataset.theme=THEME;const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=THEME==="dark"?"#131528":"#F2F3F7";}
+function render(){
+  applyTheme();
+  const app=$("#app");
+  if(auth==="setup"){app.innerHTML=authScreen("sleepy","Almost ready","Karate-Ka Companion isn't connected to its sheet yet."+(setupMsg?" "+esc(setupMsg):""),"");return;}
+  if(auth==="signin"){app.innerHTML=authScreen("happy","Karate-Ka Companion","Your private karate notebook",
+    `<div class="grow"></div><div id="gbtn">${CLIENT&&API?"":'<p>Sign-in isn\'t set up on this phone yet.</p>'}</div>
+     <div class="note">${I.lock}<span>Only the owner's Google account can open these notes. Anyone else has to ask the owner for permission.</span></div>`);
+    if(CLIENT&&API){loadGis();drawGis();}return;}
+  if(auth==="noaccess"){app.innerHTML=authScreen("stern","These notes are private",
+    `You're signed in as <strong style="color:var(--ink)">${esc(noAccess.email)}</strong>, which doesn't have permission to open this companion.`,
+    `<div class="grow"></div>${noAccess.requested
+      ?'<div class="note">'+I.check+'<span>Request sent. The owner gets an email and decides. Nothing is shown until they say yes.</span></div><button class="btn primary wide" data-act="recheck">Check again</button>'
+      :'<button class="btn primary wide" data-act="ask">Ask the owner for access</button>'}
+     <button class="btn wide" data-act="other-account">Use a different account</button>`);return;}
+  if(!ready){app.innerHTML=authScreen("sleepy","Opening your notes…","","");return;}
+  let html="";
+  if(tab==="kata"&&kataOpen)html=kataPage(kataOpen);
+  else html=header()+(tab==="kata"?viewKataList():tab==="goals"?viewGoals():viewNotes());
+  app.innerHTML=html+nav()+(ROLE==="owner"&&!(tab==="kata"&&!kataOpen)?`<button class="fab" data-act="new" aria-label="New note">${I.plus}</button>`:"");
+  setSync(syncState||"ok");
+  replayTap();
+}
+function authScreen(mood,title,body,extra){
+  return `<div class="auth">${mascot(mood)}<div><h1>${esc(title)}</h1>${body?`<p style="margin-top:8px">${body}</p>`:""}</div>${extra}</div>`;
+}
+function header(){
+  const letter=esc((EMAIL||"?").charAt(0).toUpperCase());
+  return `<header class="top">${mascot("happy").replace('class="m"','width="44" height="44"')}
+    <div class="ttl"><h1>Karate-Ka Companion</h1><button class="sub sync" id="sync" data-act="sync"></button></div>
+    <button class="ibtn" data-act="account" aria-label="Account, theme and access"><span class="avatar">${letter}</span></button></header>`;
+}
+function nav(){
+  const t=(k,lbl,ic)=>`<button class="tab" role="tab" data-act="tab" data-v="${k}" aria-selected="${tab===k}">${ic}${lbl}</button>`;
+  return `<nav class="nav" aria-label="Sections"><div class="in" role="tablist">${t("notes","Notes",I.notes)}${t("kata","Kata",I.kata)}${t("goals","Goals",I.star)}</div></nav>`;
+}
+function noteCard(n){
+  const t=typeOf(n.type),title=noteTitle(n);
+  const meta=[`<b>${esc(t.s)}</b>`,n.kata&&title!==n.kata?esc(n.kata):"",n.from!=="Me"?esc(n.from):""].filter(Boolean).join(" · ");
+  const snip=n.title||n.type!=="Kata"||!n.kata?String(n.note||"").replace(/\s+/g," "):String(n.note||"").replace(/\s+/g," ");
+  return `<button class="note t-${t.c}" data-act="open-note" data-id="${esc(n.id)}"><span class="ico">${icon(t.c)}</span>
+    <span class="nbody"><span class="meta">${meta}</span><span class="ntitle">${esc(title)}</span>${snip&&snip!==title?`<span class="nsnip">${esc(snip)}</span>`:""}</span>
+    ${n.pinned?`<span class="pin" aria-label="Pinned">${I.pin}</span>`:""}</button>`;
+}
+function viewNotes(){
+  const pinned=S.notes.filter(n=>n.pinned&&!(n.type==="Goals"&&n.done)).sort((a,b)=>byDate(b,a)).slice(0,3);
+  const heroes=pinned.length?`<div class="heroes">${pinned.map(n=>`<button class="hero" data-act="open-note" data-id="${esc(n.id)}">
+      <svg class="star" viewBox="0 0 32 32" aria-hidden="true">${ICONS.goals.replace(/currentColor/g,"#1E2235")}</svg>
+      <span class="grow"><span class="lbl" style="display:block">Working on</span><span class="big">${esc([n.kata&&noteTitle(n)!==n.kata?n.kata:"",noteTitle(n)].filter(Boolean).join(" · "))}</span></span>
+      <span style="width:20px;height:20px;color:var(--hero-muted)">${I.right}</span></button>`).join("")}</div>`:"";
+  const chips=[{k:"All",c:""}].concat(TYPES).map(t=>`<button class="chip ${t.c?"t-"+t.c:""}" data-act="type" data-v="${esc(t.k)}" aria-pressed="${typeF===t.k}">${esc(t.s||t.k)}</button>`).join("");
+  return `<div class="search">${I.search}<label for="q" class="sr">Search notes</label><input id="q" type="search" placeholder="Search notes, kata, sensei…" value="${esc(q)}" autocomplete="off"></div>
+    <div class="chips" role="group" aria-label="Note type">${chips}</div>
+    ${heroes}
+    <div class="row pad" style="margin-top:12px"><button class="sbtn" data-act="datef">${I.cal}${esc(dateLabel())}<span style="width:14px;height:14px;display:inline-flex">${I.down}</span></button>
+      <span class="grow"></span><button class="sbtn" data-act="sort" aria-label="Sort order: ${sortNew?"newest first":"oldest first"}">${I.sort}${sortNew?"Newest first":"Oldest first"}</button></div>
+    <div id="list">${notesList()}</div>`;
+}
+function notesList(){
+  const list=filtered();
+  if(!S.notes.length)return `<div class="empty">${mascot("happy")}No notes yet.${ROLE==="owner"?"<br>Tap + to write your first one.":""}</div>`;
+  if(!list.length)return `<div class="empty">${mascot("sleepy")}No notes match.</div>`;
+  let last="",out="";
+  list.forEach(n=>{const k=dayKey(n.date);if(k!==last){out+=`<h2 class="dhead">${esc(relDay(k))}</h2>`;last=k;}out+=noteCard(n);});
+  return `<div class="list">${out}</div>`;
+}
+function viewGoals(){
+  const goals=S.notes.filter(n=>n.type==="Goals");
+  const open=goals.filter(n=>!n.done).sort((a,b)=>byDate(b,a)),done=goals.filter(n=>n.done).sort((a,b)=>byDate(b,a));
+  const row=n=>`<div class="goal ${n.done?"done":""}"><button class="check" data-act="goal-done" data-id="${esc(n.id)}" aria-pressed="${n.done}" aria-label="${n.done?"Mark not done":"Mark done"}" ${ROLE!=="owner"?"disabled":""}>${n.done?I.check:icon("goals")}</button>
+    <button class="nbody" data-act="open-note" data-id="${esc(n.id)}"><span class="meta">${esc(relDay(dayKey(n.date)))}${n.kata?" · "+esc(n.kata):""}</span><span class="ntitle">${esc(noteTitle(n))}</span>${n.title&&n.note?`<span class="nsnip">${esc(n.note)}</span>`:""}</button></div>`;
+  if(!goals.length)return `<div class="empty">${mascot("happy")}No goals yet.${ROLE==="owner"?"<br>Tap + to set one.":""}</div>`;
+  return `<div class="list"><h2 class="dhead">Working towards</h2>${open.map(row).join("")||'<p class="sub">All done. Time for a new one!</p>'}
+    ${done.length?`<h2 class="dhead" style="margin-top:10px">Done</h2>${done.map(row).join("")}`:""}</div>`;
+}
+function viewKataList(){
+  return `<div class="search">${I.search}<label for="kq" class="sr">Search kata</label><input id="kq" type="search" placeholder="Search kata…" value="${esc(kq)}" autocomplete="off"></div>
+    <div id="klist">${kataRows()}</div>`;
+}
+function kataRows(){
+  const qq=kq.trim().toLowerCase();
+  const all=kataNames().filter(k=>!qq||(k.name+" "+k.en).toLowerCase().includes(qq));
+  if(!all.length)return `<div class="empty">${mascot("sleepy")}${kataNames().length?"No kata match.":"The dojo's kata list will show up after the next sync."}</div>`;
+  const counts={};S.notes.forEach(n=>{if(n.kata){const k=n.kata.toLowerCase();counts[k]=(counts[k]||0)+1;}});
+  return `<div class="list">${all.map(k=>{const info=kataInfo(k.name),c=counts[k.name.toLowerCase()]||0;
+    return `<button class="krow" data-act="open-kata" data-v="${esc(k.name)}"><span class="knum">${k.order<999?esc(k.order):""}</span>
+      <span class="grow" style="min-width:0"><span class="kname">${esc(k.name)}</span>${k.en?`<span class="ken">${esc(k.en)}</span>`:""}</span>
+      <span class="badges">${info&&info.status?`<span class="badge s-${info.status}">${esc(info.status)}</span>`:""}
+      <span class="badge">${c} note${c===1?"":"s"}${info&&info.kiais!=null?" · "+info.kiais+" kiai"+(info.kiais===1?"":"s"):""}</span></span></button>`;}).join("")}</div>`;
+}
+function kataPage(name){
+  const info=kataInfo(name)||{},en=kataEn(name),can=ROLE==="owner";
+  const notes=S.notes.filter(n=>eqi(n.kata,name)).sort((a,b)=>byDate(b,a));
+  const rems=String(info.reminders||"").split("\n").map(s=>s.trim()).filter(Boolean);
+  const k=info.kiais;
+  return `<div class="backrow"><button class="ibtn" data-act="kata-back" aria-label="Back to kata list">${I.back}</button><span class="grow"></span>
+      ${can?`<button class="btn primary" data-act="new-kata-note" style="height:44px">${I.plus.replace("<svg",'<svg width="18" height="18"')}Add note</button>`:""}</div>
+    <section class="khero"><div class="row" style="gap:14px"><span style="width:64px;height:64px;color:var(--kata-i)">${icon("kata")}</span>
+      <div><h1>${esc(name)}</h1>${en?`<div class="en">${esc(en)}</div>`:""}</div></div>
+      <div class="seg" role="group" aria-label="How it feels">${STATUSES.map(s=>`<button data-act="kstatus" data-v="${s}" aria-pressed="${info.status===s}" ${can?"":"disabled"}>${s}</button>`).join("")}</div>
+      <div class="kiai">${KIAI}<div class="grow"><div class="sub">Kiais in this kata</div><div class="n">${k==null?"Not set":k}</div></div>
+        ${can?`<button class="step" data-act="kiai" data-v="-1" aria-label="One less kiai" ${!k?"disabled":""}>−</button><button class="step plus" data-act="kiai" data-v="1" aria-label="One more kiai">+</button>`:""}</div>
+      <a href="${KATA_SITE}?kata=${encodeURIComponent(name)}" target="_blank" rel="noopener" style="font-size:14px;font-weight:800;color:var(--kata-i);display:flex;align-items:center;gap:6px;min-height:24px">Open in the dojo Kata Tracker<span style="width:16px;height:16px;display:inline-flex">${I.ext}</span></a>
+    </section>
+    <section class="box"><div class="row"><h2 class="grow" style="margin:0">Key reminders</h2>${can?`<button class="mini" data-act="edit-rem">Edit</button>`:""}</div>
+      <div style="margin-top:8px">${rems.length?rems.map(r=>`<div class="rem"><i aria-hidden="true"></i>${esc(r)}</div>`).join(""):`<p class="sub" style="margin:0">${can?"Tap Edit to add the things you always want to remember.":"None yet."}</p>`}</div></section>
+    <div class="pad" style="margin-top:16px"><h2 class="h2">All notes on this kata</h2>
+    ${notes.length?notes.map(n=>{const t=typeOf(n.type);return `<div class="tl t-${t.c}"><div class="rail"><span class="dot"></span><span class="line"></span></div>
+      <button data-act="open-note" data-id="${esc(n.id)}"><span class="meta">${esc(fmtDay(dayKey(n.date)))}${n.from!=="Me"?`<span class="tag t-sensei">${esc(n.from)}</span>`:""}${n.type!=="Kata"?`<span class="tag">${esc(t.s)}</span>`:""}</span>
+      <span class="ntitle" style="font-size:15px">${esc(noteTitle(n))}</span>${n.title&&n.note?`<span class="nsnip">${esc(n.note)}</span>`:""}</button></div>`;}).join("")
+      :`<p class="sub">No notes on ${esc(name)} yet.</p>`}</div>`;
+}
+
+/* ---------- panels ---------- */
+function openSheet(s){hideToast();if(!sheet)lastFocus=document.activeElement;sheet=s;renderSheet();$("#sheetWrap").hidden=false;document.body.style.overflow="hidden";
+  setTimeout(()=>{const f=$("#sheet [autofocus]")||$("#sheet .close");if(f)f.focus();},40);}
+function closeSheet(){sheet=null;const w=$("#sheetWrap");if(w)w.hidden=true;document.body.style.overflow="";if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
+function renderSheet(){if(!sheet)return;const b=$("#sheet");
+  b.innerHTML=sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):accountSheet();
+  b.setAttribute("aria-label",sheet.type==="form"?"Note":sheet.type);replayTap();}
+const shead=t=>`<div class="shead"><h2>${esc(t)}</h2><button type="button" class="ibtn close" data-act="close" aria-label="Close">${I.close}</button></div>`;
+function noteSheet(id){
+  const n=S.notes.find(x=>x.id===id);if(!n)return shead("Note")+'<p class="sub">This note was removed.</p>';
+  const t=typeOf(n.type),can=ROLE==="owner";
+  return shead(noteTitle(n))+`<div class="row t-${t.c}" style="gap:10px"><span class="ico">${icon(t.c)}</span>
+    <div><div class="meta"><b>${esc(t.s)}</b>${n.from!=="Me"?" · from "+esc(n.from):""}</div><div style="font-weight:800">${esc(fmtDay(dayKey(n.date),true))}</div></div></div>
+    ${n.kata?`<button class="opt" data-act="open-kata" data-v="${esc(n.kata)}">${esc(n.kata)}<span class="grow"></span><span style="width:18px;height:18px">${I.right}</span></button>`:""}
+    ${n.note?`<div class="view-body">${esc(n.note)}</div>`:""}
+    ${n.video?`<p style="margin-top:14px"><a href="${esc(/^https?:\/\//i.test(n.video)?n.video:"https://"+n.video)}" target="_blank" rel="noopener" style="font-weight:800;display:inline-flex;gap:6px;align-items:center"><span style="width:20px;height:20px;display:inline-flex">${I.video}</span>Watch video</a></p>`:""}
+    ${can?`<div class="btns"><button class="btn primary" data-act="edit-note" data-id="${esc(n.id)}">Edit</button>
+      <button class="btn" data-act="pin" data-id="${esc(n.id)}">${n.pinned?"Unpin":"Pin"}</button>
+      <button class="btn danger" data-act="del-note" data-id="${esc(n.id)}" data-confirm="Tap again to delete">Delete</button></div>`:""}`;
+}
+function formSheet(f){
+  const n=f.id?S.notes.find(x=>x.id===f.id):null;
+  const v=n||{type:f.preType||(typeF!=="All"?typeF:"Kata"),kata:f.preKata||"",date:Date.now(),from:"Me",title:"",note:"",video:"",pinned:false};
+  const names=kataNames();if(v.kata&&!names.some(k=>eqi(k.name,v.kata)))names.push({name:v.kata});
+  return `<form id="noteForm" novalidate>`+shead(n?"Edit note":"New note")+`
+    <fieldset style="border:none;margin:0;padding:0"><legend class="legend" style="padding:0 0 8px">What kind?</legend><div class="tiles">
+    ${TYPES.map(t=>`<label class="tile t-${t.c}"><input type="radio" name="type" value="${esc(t.k)}" ${eqi(v.type,t.k)?"checked":""}><span>${icon(t.c)}${esc(t.s)}</span></label>`).join("")}</div></fieldset>
+    <label class="field"><span>Kata (from the dojo list)</span><select class="inp" name="kata"><option value="">None</option>
+      ${names.map(k=>`<option value="${esc(k.name)}" ${eqi(k.name,v.kata)?"selected":""}>${esc(k.name)}</option>`).join("")}</select></label>
+    <label class="field"><span>Date</span><input class="inp" type="date" name="date" value="${dayKey(v.date)}" max="${shiftDay(todayKey(),366)}" required></label>
+    <fieldset class="field" style="border:none;padding:0;margin:14px 0 0"><legend class="legend" style="padding:0 0 6px">Who said it?</legend><div class="pills">
+    ${FROM.map(x=>`<label class="pillr"><input type="radio" name="from" value="${x.k}" ${v.from===x.k?"checked":""}><span>${x.s}</span></label>`).join("")}</div></fieldset>
+    <label class="field"><span>Title</span><input class="inp" name="title" value="${esc(v.title)}" maxlength="140" placeholder="A few words"></label>
+    <label class="field"><span>Note</span><textarea class="inp" name="note" rows="5" placeholder="What did you learn or notice?">${esc(v.note)}</textarea></label>
+    <label class="field"><span>Video link (optional)</span><input class="inp" type="url" name="video" value="${esc(v.video)}" placeholder="https://…" inputmode="url"></label>
+    <label class="swrow"><span class="grow">Pin to "Working on"</span><input type="checkbox" name="pinned" ${v.pinned?"checked":""}></label>
+    <div class="btns"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></form>`;
+}
+function saveNote(form){
+  const fd=new FormData(form);const s=k=>String(fd.get(k)||"").trim();
+  const data={type:s("type")||"General",kata:s("kata"),date:keyDate(s("date")||todayKey()).getTime(),from:s("from")||"Me",
+    title:s("title"),note:String(fd.get("note")||"").replace(/\s+$/,""),video:s("video"),pinned:!!fd.get("pinned")};
+  if(!data.title&&!data.note.trim()){toast("Write a title or a note first.");return;}
+  const editing=sheet.id;
+  if(editing)store.update("notes",editing,data);else store.add("notes",Object.assign({added:Date.now(),done:false},data));
+  closeSheet();toast(editing?"Saved":"Note saved");
+}
+function dateSheet(){
+  const months=[...new Set(S.notes.map(n=>dayKey(n.date).slice(0,7)))].sort().reverse().slice(0,18);
+  return shead("Show notes from")+DATE_OPTS.map(o=>`<button class="opt" data-act="setdate" data-v="${o[0]}" aria-pressed="${dateF===o[0]}">${o[1]}</button>`).join("")+
+    (months.length?`<h2 class="h2" style="margin-top:18px">Months with notes</h2><div class="pills">${months.map(m=>`<button class="chip" data-act="setdate" data-v="${m}" aria-pressed="${dateF===m}">${esc(fmtMonth(m))}</button>`).join("")}</div>`:"")+
+    `<label class="field"><span>Or pick a month</span><input class="inp" type="month" id="pickMonth" value="${/^\d{4}-\d{2}$/.test(dateF)?dateF:todayKey().slice(0,7)}"></label>`;
+}
+function remSheet(name){
+  const info=kataInfo(name)||{};
+  return `<form id="remForm">`+shead("Key reminders")+`<p class="sub" style="margin:0">${esc(name)} · one reminder per line</p>
+    <label class="field"><span class="sr">Reminders</span><textarea class="inp" name="rem" rows="6" autofocus>${esc(info.reminders||"")}</textarea></label>
+    <div class="btns"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></form>`;
+}
+function accountSheet(){
+  const owner=ROLE==="owner";
+  const acc=owner?S.access.slice().sort((a,b)=>(a.status==="Requested"?0:1)-(b.status==="Requested"?0:1)):[];
+  return shead("Account")+`<div class="acc"><span class="avatar" style="width:36px;text-align:center">${esc((EMAIL||"?").charAt(0).toUpperCase())}</span><span class="em">${esc(EMAIL)}<br><span class="sub">${owner?"Owner · full access":"View only"}</span></span></div>
+    <h2 class="h2" style="margin-top:18px">Look</h2><div class="seg" style="background:var(--surface)"><button data-act="theme" data-v="dark" aria-pressed="${THEME==="dark"}">Dark</button><button data-act="theme" data-v="light" aria-pressed="${THEME==="light"}">Light</button><span></span></div>
+    ${owner?`<h2 class="h2" style="margin-top:18px">Access</h2>${acc.length?acc.map(a=>`<div class="acc"><span class="em">${esc(a.email)}<br><span class="sub">${esc(a.status)}</span></span>
+      ${a.status!=="Approved"?`<button class="mini yes" data-act="access" data-id="${esc(a.id)}" data-v="Approved">Allow</button>`:""}
+      ${a.status!=="Denied"?`<button class="mini" data-act="access" data-id="${esc(a.id)}" data-v="Denied">${a.status==="Approved"?"Remove":"Say no"}</button>`:""}</div>`).join("")
+      :`<p class="sub" style="margin:0">Nobody else can see your notes. If someone asks, you'll get an email and they'll show up here.</p>`}`:""}
+    <div class="btns col">${owner&&sheetUrl?`<a class="btn wide" href="${esc(sheetUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:var(--ink)">Open my Google Sheet</a>`:""}
+      <button class="btn wide danger" data-act="signout">Sign out</button></div>`;
+}
+
+/* ---------- toast ---------- */
+let tT=0,tAct=null;
+function toast(msg,act){const el=$("#toast");tAct=act||null;el.innerHTML=`<span class="grow">${esc(msg)}</span>${act?`<button data-act="toast">${esc(act.label)}</button>`:""}`;el.hidden=false;clearTimeout(tT);tT=setTimeout(hideToast,act?6000:2800);}
+function hideToast(){const el=$("#toast");if(el)el.hidden=true;tAct=null;}
+function armed(btn){if(btn.dataset.armed==="1")return true;const orig=btn.innerHTML;btn.dataset.armed="1";btn.textContent=btn.dataset.confirm;setTimeout(()=>{if(btn.isConnected){btn.dataset.armed="";btn.innerHTML=orig;}},3200);return false;}
+
+function onData(){if(auth!=="ok"||!ready)return;render();if(sheet&&sheet.type!=="form"&&sheet.type!=="rem")renderSheet();}
+
+/* ---------- taps ---------- */
+document.addEventListener("click",e=>{
+  if(e.target.id==="sheetWrap"){closeSheet();return;}
+  const b=e.target.closest("[data-act]");if(!b||b.disabled)return;
+  const a=b.dataset.act,id=b.dataset.id,v=b.dataset.v;
+  switch(a){
+    case"tab":tab=v;LS.set("tab",v);if(v!=="kata")kataOpen=null;render();window.scrollTo(0,0);break;
+    case"type":typeF=v;render();break;
+    case"sort":sortNew=!sortNew;LS.set("sort",sortNew?"new":"old");render();break;
+    case"datef":openSheet({type:"date"});break;
+    case"setdate":dateF=v;closeSheet();render();break;
+    case"account":openSheet({type:"account"});break;
+    case"sync":flush();break;
+    case"close":closeSheet();break;
+    case"new":openSheet({type:"form",preType:tab==="goals"?"Goals":"",preKata:tab==="kata"&&kataOpen?kataOpen:""});break;
+    case"new-kata-note":openSheet({type:"form",preType:"Kata",preKata:kataOpen});break;
+    case"open-note":openSheet({type:"note",id});break;
+    case"edit-note":openSheet({type:"form",id});break;
+    case"pin":{const n=S.notes.find(x=>x.id===id);if(n){store.update("notes",id,{pinned:!n.pinned});toast(n.pinned?"Pinned to Working on":"Unpinned");}break;}
+    case"del-note":{if(!armed(b))break;const n=S.notes.find(x=>x.id===id);if(!n)break;const copy=Object.assign({},n);delete copy.id;
+      store.del("notes",id);closeSheet();toast("Note deleted",{label:"Undo",fn:()=>enqueue({op:"add",coll:"notes",id,data:copy})});break;}
+    case"goal-done":{const n=S.notes.find(x=>x.id===id);if(n)store.update("notes",id,{done:!n.done});if(n&&n.done)toast("Goal done. Nice work!");break;}
+    case"open-kata":closeSheet();tab="kata";LS.set("tab","kata");kataOpen=v;render();window.scrollTo(0,0);break;
+    case"kata-back":kataOpen=null;render();break;
+    case"kstatus":{const info=kataInfo(kataOpen);upsertKata(kataOpen,{status:info&&info.status===v?"":v});break;}
+    case"kiai":{const info=kataInfo(kataOpen);const cur=info&&info.kiais!=null?info.kiais:0;upsertKata(kataOpen,{kiais:Math.max(0,cur+Number(v))});break;}
+    case"edit-rem":openSheet({type:"rem",name:kataOpen});break;
+    case"theme":THEME=v;LS.set("theme",v);applyTheme();render();renderSheet();break;
+    case"access":store.update("access",id,{status:v});break;
+    case"signout":signOut();break;
+    case"ask":(async()=>{b.disabled=true;let res;try{res=await callApi({session:SESSION,requestAccess:true});}catch(e2){res={ok:false,error:"network"};}handle(res,0);})();break;
+    case"recheck":(async()=>{b.disabled=true;let res;try{res=await callApi({session:SESSION});}catch(e2){res={ok:false,error:"network"};}handle(res,0);if(auth==="noaccess")toast("Not yet. You'll get in once the owner says yes.");})();break;
+    case"other-account":signOut();LS.del("signedOut");break;
+    case"toast":{const f=tAct&&tAct.fn;hideToast();if(f)f();break;}
+  }
+});
+document.addEventListener("submit",e=>{
+  e.preventDefault();
+  if(e.target.id==="noteForm")saveNote(e.target);
+  if(e.target.id==="remForm"){const txt=String(new FormData(e.target).get("rem")||"").split("\n").map(s=>s.trim()).filter(Boolean).join("\n");upsertKata(sheet.name,{reminders:txt});closeSheet();}
+});
+document.addEventListener("input",e=>{
+  if(e.target.id==="q"){q=e.target.value;$("#list").innerHTML=notesList();}
+  if(e.target.id==="kq"){kq=e.target.value;$("#klist").innerHTML=kataRows();}
+});
+document.addEventListener("change",e=>{if(e.target.id==="pickMonth"&&e.target.value){dateF=e.target.value;closeSheet();render();}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheet)closeSheet();});
+
+/* ---------- press feedback ----------
+   Taps usually redraw the screen, so the ring is replayed on the redrawn copy of the same button. */
+const TAP_SEL="button,.tile,.pillr,a.btn";
+let lastTap=null;
+const tapTarget=el=>el.matches(".tile,.pillr")?el.querySelector("span")||el:el;
+function tapKey(el){const parts=["act","id","v"].filter(k=>el.dataset[k]!=null).map(k=>`[data-${k}="${CSS.escape(el.dataset[k])}"]`);return parts.length?parts.join(""):null;}
+function popTap(t){t.classList.remove("tapping","tapped");void t.offsetWidth;t.classList.add("tapped");setTimeout(()=>t.classList.remove("tapped"),460);}
+document.addEventListener("pointerdown",e=>{
+  const el=e.target.closest(TAP_SEL);if(!el||el.disabled)return;
+  const t=tapTarget(el);t.classList.add("tapping");
+  const key=tapKey(el),inSheet=!!el.closest("#sheetWrap"),root=inSheet?$("#sheetWrap"):document;
+  lastTap={el:t,key,nth:key?[...root.querySelectorAll(key)].indexOf(el):0,inSheet,x:e.clientX,y:e.clientY,at:Date.now()};
+},{passive:true});
+document.addEventListener("pointermove",e=>{if(lastTap&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)>12){lastTap.el.classList.remove("tapping");lastTap=null;}},{passive:true});
+document.addEventListener("pointerup",()=>{if(!lastTap)return;popTap(lastTap.el);lastTap.at=Date.now();},{passive:true});
+document.addEventListener("pointercancel",()=>{if(lastTap){lastTap.el.classList.remove("tapping");lastTap=null;}},{passive:true});
+function replayTap(){
+  if(!lastTap||lastTap.el.isConnected||!lastTap.key||Date.now()-lastTap.at>600)return;
+  const root=lastTap.inSheet?$("#sheetWrap"):document;
+  const all=root?[...root.querySelectorAll(lastTap.key)]:[];const el=all[lastTap.nth]||all[0];if(el){const t=tapTarget(el);lastTap.el=t;popTap(t);}
+}
+
+/* ---------- start ---------- */
+function boot(){
+  readLinkParams();
+  if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+  if(!API||!CLIENT){auth=SESSION&&API?"ok":"signin";}
+  if(SESSION&&API){auth="ok";if(loadCache())ready=true;}
+  render();
+  if(auth==="ok")flush();
+}
+boot();
+})();
+</script>
+</body>
+</html>

@@ -1,4 +1,8 @@
-# Karate-Ka Companion: handoff notes
+# Karate-Ka Companion — Brief
+
+> **Claude: read this first.** Open only the files a change touches, and use the code map below to jump to a function instead of reading whole files.
+> `index.html` is about 57 KB (~15k tokens): don't read it whole; search for a function name (e.g. `grep -n "function render" index.html`) and read just that function.
+> At the end of a work session, update **Status** and add one line to **Changelog** (keep about 10).
 
 Gary's private karate notebook. Dated notes typed Kata / Kihon / Kumite / Sensei says / Goals / General,
 a page per kata (how it feels, fixed kiai count, key reminders, every note on that kata) and a Goals tab.
@@ -47,3 +51,35 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 - Tests: `node test/backend.test.js` and `node test/e2e.js <shots dir>` (Node mock of Apps Script + Playwright,
   Google sign-in stubbed).
 - Commits use author `Claude <noreply@anthropic.com>`.
+
+## Code map
+API: op-batched like Pantry Pal, signed with a session token from Google sign-in.
+
+| File | Lines | What's in it |
+|---|---|---|
+| `Code.gs` | 565 | `doGet`/`doPost`/`api`; privacy (`ownerEmail_`, `verifyIdToken_`, `newSession_`, `sessionEmail_`, `roleOf_`, `accessStatus_`, `requestAccess_`); data (`readAll_`, `applyOp_`, `kataList_` from the Kata Tracker sheet); menu (`onOpen`, `setup`, `setClientId`, `openApp`, `signOutAll`); `buildTab_` |
+| `index.html` | 706 | theme pre-load (line ~15), CSS (~16–200), markup (~202–205), one `<script>` (~206–704) |
+| `test/` | | `backend.test.js`, `e2e.js`, `mock.js` (Apps Script mock) |
+
+Inside the `index.html` script, search for:
+- Sync and cache: `callApi`, `enqueue`, `flush`, `handle`, `normalize`, `saveCache`, `loadCache`, `boot`
+- Sign-in: `loadGis`, `initGis`, `drawGis`, `signIn`, `signOut`, `wipeLocal`, `authScreen`
+- Layout and theme: `render`, `header`, `nav`, `applyTheme`, `ICONS`, `mascot`
+- Notes: `viewNotes`, `notesList`, `noteCard`, `filtered`, `inDate`, `noteSheet`, `saveNote`, `dateSheet`
+- Kata: `upsertKata`, `kataNames`, `viewKataList`, `kataRows`, `kataPage`
+- Goals: `viewGoals`
+- Panels: `openSheet`, `renderSheet`, `formSheet`, `remSheet`, `accountSheet`, `toast`
+- Tap feedback: `tapKey`, `replayTap`
+
+## Status
+- Working: notes, kata pages, goals, Google sign-in private to Gary's account; web app version 2.
+- Open: publishing the OAuth app (to let others in without test-user setup) needs a home page and privacy link on the Branding page.
+
+## Changelog (latest first, keep about 10 lines)
+- 2026-10-18: Turned the handoff notes into a brief (read-first rules, code map, status, changelog)
+- 2026-10-18: Note web app version 2
+- 2026-10-18: Use the real Cloudflare address karate-ka-companion.pages.dev
+- 2026-10-18: Note sign-in setup in handoff
+- 2026-10-18: Add Google sign-in client ID
+- 2026-10-18: Connect the app to the live Apps Script web app
+- 2026-10-18: Karate-Ka Companion: private karate notebook

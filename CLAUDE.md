@@ -17,6 +17,10 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 ## Privacy model (Gary's requirement: private to his Google account)
 
 - The app signs in with Google Identity Services (`CLIENT_ID` in index.html, same ID in script property `CLIENT_ID`).
+  OAuth client lives in Google Cloud project "Karate-Ka Companion" (Gary's account). It is in **Testing** mode with
+  Gary as the only test user, so other accounts are blocked by Google before reaching the app. To let someone in:
+  add them as a test user, then Approve them. Publishing needs a home page + privacy link on the Branding page.
+  The Claude extension can't open console.cloud.google.com or dash.cloudflare.com; Gary does those.
 - `Code.gs` verifies the ID token with Google's tokeninfo endpoint (audience must match), then hands out
   its own 60-day session token (stored hashed in script properties). Every call re-checks the role.
 - Owner = the account the script runs as (`Session.getEffectiveUser()`), so no email is hard-coded in this public repo.

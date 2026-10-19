@@ -43,6 +43,7 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 - Press feedback: `.tapping` dip + `.tapped` ring, replayed on the redrawn button (`replayTap`).
 - Sync: optimistic op queue, batched, 60 s polling (same pattern as Climb Buddy / Pantry Pal).
 - `?kata=<name>` opens that kata's page (for links from other apps).
+- Phone Back: one guard history entry (`guardBack`, `popstate` handler) so Back closes a panel, then the kata page, then returns to Notes; on Notes it asks "Press back again to close".
 
 ## Changing things
 
@@ -95,6 +96,7 @@ Inside the `index.html` script, search for:
 - Kata tab: kata not on the dojo list (e.g. Boken no Kata) show under "My other kata" at the bottom.
 
 ## Changelog (latest first, keep about 10 lines)
+- 2026-10-19: Phone Back button steps back inside the app instead of closing it
 - 2026-10-18: Kata tab grouped Solo / Multi-person / Weapon, then by belt (Category + Belt from the Kata Tracker sheet). Web app v4.
 - 2026-10-18: Imported old Samsung Notes (33 notes, 18 kata pages) straight into the sheet
 - 2026-10-18: Per-kiai notes on each kata page (collapsed by default, editable). Web app v3.

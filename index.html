@@ -716,6 +716,19 @@ document.addEventListener("input",e=>{
 });
 document.addEventListener("change",e=>{if(e.target.id==="pickMonth"&&e.target.value){dateF=e.target.value;closeSheet();render();}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheet)closeSheet();});
+/* Phone back button: keep one guard entry in history so Back steps out of the app's own screens
+   (panel → kata page → Notes tab) instead of closing the app. On the Notes tab, Back asks once more. */
+let exitArmed=false,exitT;
+const guardBack=()=>{try{history.pushState({kc:1},"");}catch(e){}};
+window.addEventListener("popstate",()=>{
+  if(exitArmed)return; // second Back on the home screen: let the app close
+  if(sheet)closeSheet();
+  else if(tab==="kata"&&kataOpen){kataOpen=null;kiaiOpen=false;render();window.scrollTo(0,0);}
+  else if(tab!=="notes"){tab="notes";kataOpen=null;LS.set("tab","notes");render();window.scrollTo(0,0);}
+  else{exitArmed=true;toast("Press back again to close");clearTimeout(exitT);exitT=setTimeout(()=>{exitArmed=false;guardBack();},2800);return;}
+  guardBack();
+});
+guardBack();
 
 /* ---------- press feedback ----------
    Taps usually redraw the screen, so the ring is replayed on the redrawn copy of the same button. */

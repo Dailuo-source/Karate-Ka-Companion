@@ -14,7 +14,7 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 | --- | --- |
 | Live app | https://karate-ka-companion.pages.dev/ (Cloudflare Pages from `main`) |
 | Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, My kata, Access |
-| Backend | Apps Script project "Karate-Ka Companion" bound to the sheet; source is `Code.gs` here. Web app version 3 (Execute as Gary, access Anyone), URL in `API_URL` in index.html |
+| Backend | Apps Script project "Karate-Ka Companion" bound to the sheet; source is `Code.gs` here. Web app version 4 (Execute as Gary, access Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the dojo Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
 | Setup guide | `SETUP.md` |
 
@@ -91,11 +91,11 @@ Inside the `index.html` script, search for:
 
 ## Status
 - Working: live at karate-ka-companion.pages.dev, Gary signed in and using it.
-- Next up: paste Code.gs into Apps Script and deploy a New version (v4) so the Kata tab gets categories and belts.
+- Next up: nothing pending.
 - Kata tab: kata not on the dojo list (e.g. Boken no Kata) show under "My other kata" at the bottom.
 
 ## Changelog (latest first, keep about 10 lines)
-- 2026-10-18: Kata tab grouped Solo / Multi-person / Weapon, then by belt (Category + Belt from the Kata Tracker sheet). Code.gs needs web app v4.
+- 2026-10-18: Kata tab grouped Solo / Multi-person / Weapon, then by belt (Category + Belt from the Kata Tracker sheet). Web app v4.
 - 2026-10-18: Imported old Samsung Notes (33 notes, 18 kata pages) straight into the sheet
 - 2026-10-18: Per-kiai notes on each kata page (collapsed by default, editable). Web app v3.
 - 2026-10-18: First release; Google sign-in (Testing mode), moved to karate-ka-companion.pages.dev.

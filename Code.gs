@@ -379,7 +379,7 @@ function readAll_(role) {
 /** The dojo's kata list, read-only, cached for 6 hours. */
 function kataList_() {
   const cache = CacheService.getScriptCache();
-  const hit = cache.get('kataList');
+  const hit = cache.get('kataList2');
   if (hit) { try { return JSON.parse(hit); } catch (e) { /* fall through */ } }
   let list = [];
   try {
@@ -389,6 +389,8 @@ function kataList_() {
     const iName = head.indexOf('kata');
     const iOrder = head.indexOf('order');
     const iEn = head.findIndex(function (h) { return /translation|english/.test(h); });
+    const iCat = head.indexOf('category');
+    const iBelt = head.indexOf('belt');
     for (let r = 1; r < vals.length; r++) {
       const name = String(vals[r][iName] || '').trim();
       if (!name) continue;
@@ -396,10 +398,12 @@ function kataList_() {
         name: name,
         order: iOrder >= 0 ? Number(vals[r][iOrder]) || r : r,
         en: iEn >= 0 ? String(vals[r][iEn] || '').trim() : '',
+        cat: iCat >= 0 ? String(vals[r][iCat] || '').trim() : '',
+        belt: iBelt >= 0 ? String(vals[r][iBelt] || '').trim() : '',
       });
     }
     list.sort(function (a, b) { return a.order - b.order; });
-    cache.put('kataList', JSON.stringify(list), 21600);
+    cache.put('kataList2', JSON.stringify(list), 21600);
   } catch (e) {
     list = [];
   }

@@ -106,6 +106,10 @@ button,.tile span,.pillr span{transition:transform .12s ease,filter .12s ease,ba
 .fab svg{width:28px;height:28px}
 
 /* kata */
+.kcat{margin:14px 0 -2px;font-size:17px;font-weight:900;color:var(--ink)}
+.kcat:first-child{margin-top:4px}
+.kbelt{display:flex;align-items:center;gap:8px;margin:6px 0 -4px;font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.4px;text-transform:uppercase}
+.kbelt i{width:24px;height:8px;border-radius:4px;background:var(--b);box-shadow:inset 0 0 0 1px rgba(140,140,160,.45)}
 .krow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border-radius:18px;padding:12px 14px;min-height:64px}
 .knum{width:30px;font-size:13px;font-weight:900;color:var(--muted);text-align:center;flex-shrink:0}
 .kname{display:block;font-size:16px;font-weight:800}
@@ -415,8 +419,8 @@ const kataInfo=name=>S.kata.find(r=>eqi(r.kata,name));
 function upsertKata(name,data){const r=kataInfo(name);if(r)store.update("kata",r.id,data);else store.add("kata",Object.assign({kata:name},data));}
 function kataNames(){
   const out=[],seen={};
-  const push=(name,en,order)=>{const k=name.toLowerCase();if(!name||seen[k])return;seen[k]=1;out.push({name,en:en||"",order:order==null?999:order});};
-  S.kataList.forEach(k=>push(String(k.name||"").trim(),k.en,k.order));
+  const push=(name,en,order,cat,belt)=>{const k=name.toLowerCase();if(!name||seen[k])return;seen[k]=1;out.push({name,en:en||"",order:order==null?999:order,cat:cat||"",belt:belt||""});};
+  S.kataList.forEach(k=>push(String(k.name||"").trim(),k.en,k.order,k.cat,k.belt));
   S.kata.forEach(k=>push(k.kata));S.notes.forEach(n=>push(n.kata));
   return out;
 }
@@ -515,16 +519,29 @@ function viewKataList(){
   return `<div class="search">${I.search}<label for="kq" class="sr">Search kata</label><input id="kq" type="search" placeholder="Search kata…" value="${esc(kq)}" autocomplete="off"></div>
     <div id="klist">${kataRows()}</div>`;
 }
+const KCATS=["Solo","Multi-person","Weapon"];
+const BELTS=["White","Yellow","Green","Blue","Purple","Brown","Black"];
+const BELT_COL=["#F4F1EA","#F2D35B","#6CC58A","#6FA0F2","#A98BEB","#A97852","#1B1B22"];
 function kataRows(){
   const qq=kq.trim().toLowerCase();
   const all=kataNames().filter(k=>!qq||(k.name+" "+k.en).toLowerCase().includes(qq));
   if(!all.length)return `<div class="empty">${mascot("sleepy")}${kataNames().length?"No kata match.":"The dojo's kata list will show up after the next sync."}</div>`;
   const counts={};S.notes.forEach(n=>{if(n.kata){const k=n.kata.toLowerCase();counts[k]=(counts[k]||0)+1;}});
-  return `<div class="list">${all.map(k=>{const info=kataInfo(k.name),c=counts[k.name.toLowerCase()]||0;
+  const row=k=>{const info=kataInfo(k.name),c=counts[k.name.toLowerCase()]||0;
     return `<button class="krow" data-act="open-kata" data-v="${esc(k.name)}"><span class="knum">${k.order<999?esc(k.order):""}</span>
       <span class="grow" style="min-width:0"><span class="kname">${esc(k.name)}</span>${k.en?`<span class="ken">${esc(k.en)}</span>`:""}</span>
       <span class="badges">${info&&info.status?`<span class="badge s-${info.status}">${esc(info.status)}</span>`:""}
-      <span class="badge">${c} note${c===1?"":"s"}${info&&info.kiais!=null?" · "+info.kiais+" kiai"+(info.kiais===1?"":"s"):""}</span></span></button>`;}).join("")}</div>`;
+      <span class="badge">${c} note${c===1?"":"s"}${info&&info.kiais!=null?" · "+info.kiais+" kiai"+(info.kiais===1?"":"s"):""}</span></span></button>`;};
+  // Group: Solo, then Multi-person, then Weapon (from the dojo Kata Tracker), each by belt rank.
+  const catOf=k=>{const i=KCATS.findIndex(c=>eqi(c,k.cat));return i<0?(k.order<999?KCATS.length:KCATS.length+1):i;};
+  const beltOf=k=>{const i=BELTS.findIndex(b=>eqi(b,k.belt));return i<0?BELTS.length:i;};
+  all.sort((a,b)=>catOf(a)-catOf(b)||beltOf(a)-beltOf(b)||a.order-b.order||a.name.localeCompare(b.name));
+  let out="",lastC=-1,lastB=-1;
+  all.forEach(k=>{const c=catOf(k),b=beltOf(k);
+    if(c!==lastC){out+=`<h2 class="kcat">${esc(KCATS[c]||(c===KCATS.length?"Dojo kata":"My other kata"))}</h2>`;lastC=c;lastB=-1;}
+    if(c<KCATS.length&&b!==lastB){out+=`<h3 class="kbelt"><i style="--b:${BELT_COL[b]||"var(--sunk)"}"></i>${esc(BELTS[b]?BELTS[b]+" belt":"Other")}</h3>`;lastB=b;}
+    out+=row(k);});
+  return `<div class="list">${out}</div>`;
 }
 const kiaiNotes=info=>String((info&&info.kiaiNotes)||"").split("\n");
 function kiaiList(info,can){

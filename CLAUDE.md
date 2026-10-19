@@ -91,9 +91,12 @@ Inside the `index.html` script, search for:
 
 ## Status
 - Working: live at karate-ka-companion.pages.dev, Gary signed in and using it.
-- Next up: nothing pending.
+- Next up: paste Code.gs into Apps Script and deploy a New version (v4) so the Kata tab gets categories and belts.
+- Kata tab: kata not on the dojo list (e.g. Boken no Kata) show under "My other kata" at the bottom.
 
 ## Changelog (latest first, keep about 10 lines)
+- 2026-10-18: Kata tab grouped Solo / Multi-person / Weapon, then by belt (Category + Belt from the Kata Tracker sheet). Code.gs needs web app v4.
+- 2026-10-18: Imported old Samsung Notes (33 notes, 18 kata pages) straight into the sheet
 - 2026-10-18: Per-kiai notes on each kata page (collapsed by default, editable). Web app v3.
 - 2026-10-18: First release; Google sign-in (Testing mode), moved to karate-ka-companion.pages.dev.
 

@@ -42,9 +42,11 @@ function load(opts) {
   const main = new SS('MAIN');
   const tracker = new SS('1QYVdiW5kZ5j-EvSQzZJ-GE12ZqwY2OUgTsSIzIloiHk');
   const kt = tracker.insertSheet('Kata');
-  kt.grid = [['Order', 'Kata', 'English Translation ', 'Category'],
-    [1, 'Tai Kyoku Shodan', 'Great overview the first', 'Solo'], [9, 'Heian Shodan', 'Peace/Tranquility the first', 'Solo'],
-    [12, 'Heian Yondan', 'Peace/Tranquility the fourth', 'Solo'], [28, 'Bassai Dai', 'Great fortress scene', 'Solo']];
+  kt.grid = [['Order', 'Kata', 'English Translation ', 'Category', 'Belt'],
+    [1, 'Tai Kyoku Shodan', 'Great overview the first', 'Solo', 'White'], [9, 'Heian Shodan', 'Peace/Tranquility the first', 'Solo', 'Yellow'],
+    [12, 'Heian Yondan', 'Peace/Tranquility the fourth', 'Solo', 'Blue'], [28, 'Bassai Dai', 'Great fortress scene', 'Solo', 'Brown'],
+    [46, 'San Chin', 'Three battles', 'Solo', 'White'], [47, 'Goshin no Kata Shodan', 'Self-protection form the first', 'Multi-person', 'White'],
+    [59, 'Sannin Tatakai', 'Three-person battle', 'Multi-person', 'Black'], [63, 'Bo Bassai Shodan', 'Long stick fortress scene the first', 'Weapon', 'Brown']];
   const props = {}; const cache = {}; const mail = [];
   const tokens = opts.tokens; // token -> email
   const ctx = {

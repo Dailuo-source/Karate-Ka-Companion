@@ -11,7 +11,9 @@ assert.equal(B.api({ idToken: 'nope' }).error, 'signed_out');
 let r = B.api({ idToken: 'tok-owner' });
 assert.ok(r.ok, JSON.stringify(r));
 assert.equal(r.role, 'owner');
-assert.equal(r.state.kataList.length, 4);
+assert.equal(r.state.kataList.length, 8);
+assert.equal(r.state.kataList[6].cat, 'Multi-person');
+assert.equal(r.state.kataList[6].belt, 'Black');
 assert.equal(r.state.kataList[3].en, 'Great fortress scene');
 const S1 = r.session;
 

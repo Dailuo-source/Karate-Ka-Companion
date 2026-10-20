@@ -4,7 +4,7 @@
 > `index.html` is about 57 KB (~15k tokens): don't read it whole; search for a function name (e.g. `grep -n "function render" index.html`) and read just that function.
 > At the end of a work session, update **Status** and add one line to **Changelog** (keep about 10).
 
-Gary's private karate notebook. Dated notes typed Kata / Kihon / Kumite / Sensei says / Goals / General,
+Gary's private karate notebook. Dated notes typed Kata / Kihon / Kumite / Sensei says / General; any note can be marked as a goal (Notes column "Goal"),
 a page per kata (how it feels, fixed kiai count with a collapsible note per kiai, key reminders, every note on that kata) and a Goals tab.
 Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 
@@ -14,7 +14,7 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 | --- | --- |
 | Live app | https://karate-ka-companion.pages.dev/ (Cloudflare Pages from `main`) |
 | Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, My kata, Access |
-| Backend | Apps Script project "Karate-Ka Companion" bound to the sheet; source is `Code.gs` here. Web app version 4 (Execute as Gary, access Anyone), URL in `API_URL` in index.html |
+| Backend | Apps Script project "Karate-Ka Companion" bound to the sheet; source is `Code.gs` here. Web app version 5 (Execute as Gary, access Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the dojo Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
 | Setup guide | `SETUP.md` |
 
@@ -38,6 +38,9 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
   (`--kata-f/--kata-i` etc., light versions in `[data-theme=light]`).
 - Kawaii icons: `ICONS` (scroll, belt ball, glove, speech bubble, star, notebook, all with faces) and the
   onigiri-in-a-headband `mascot()` (happy / sleepy / stern). App icon is the same onigiri on periwinkle.
+- Goals (Gary, Oct 20): not a note type any more. `goal` flag on any note ("Mark as a goal" switch in the form, ★ Goal badge on cards); Goals tab lists flagged notes. Old "Goals" rows read as General + goal; `setup` → `migrateGoals_` rewrites them in the sheet.
+- Note form ends in a sticky bar: Cancel + green **Save changes** ("Save note" when new). Ctrl+S saves, Esc cancels.
+- Wide screens (≥1000px): sidebar nav with the brand, content up to 920px, notes and forms open as a right-side panel. Keys: N new note, / search.
 - Notes tab: search, type chips, "Working on" (pinned), date filter (7 days / month / 3 months / any month),
   Newest/Oldest sort, grouped under date headings.
 - Press feedback: `.tapping` dip + `.tapped` ring, replayed on the redrawn button (`replayTap`).
@@ -96,6 +99,7 @@ Inside the `index.html` script, search for:
 - Kata tab: kata not on the dojo list (e.g. Boken no Kata) show under "My other kata" at the bottom.
 
 ## Changelog (latest first, keep about 10 lines)
+- 2026-10-20: Goal is a flag on any note (Goals type removed, migrated by setup), sticky Save changes bar, desktop layout. Web app v5.
 - 2026-10-19: Phone Back button steps back inside the app instead of closing it
 - 2026-10-18: Kata tab grouped Solo / Multi-person / Weapon, then by belt (Category + Belt from the Kata Tracker sheet). Web app v4.
 - 2026-10-18: Imported old Samsung Notes (33 notes, 18 kata pages) straight into the sheet

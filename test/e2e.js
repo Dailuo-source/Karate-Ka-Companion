@@ -12,8 +12,8 @@ const API = 'https://script.google.com/macros/s/TEST/exec';
 const B = load({ owner: 'owner@example.com', tokens: { 'tok-owner': 'owner@example.com', 'tok-other': 'friend@example.com' } });
 const root = path.join(__dirname, '..');
 
-async function phone(browser, token) {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: false });
+async function phone(browser, token, vp) {
+  const ctx = await browser.newContext({ viewport: vp || { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: false });
   await ctx.addInitScript(tok => {
     window.google = { accounts: { id: {
       initialize(o) { window.__cb = o.callback; },
@@ -62,6 +62,7 @@ const settle = page => page.waitForTimeout(700);
     await page.fill('input[name=title]', o.title);
     await page.fill('textarea[name=note]', o.note);
     if (o.pin) await page.check('input[name=pinned]');
+    if (o.goal) await page.check('input[name=goal]');
     await page.click('#noteForm button[type=submit]');
     await page.waitForSelector('#sheetWrap', { state: 'hidden' });
     await settle(page);
@@ -71,7 +72,7 @@ const settle = page => page.waitForTimeout(700);
   await addNote({ type: 'Kihon', title: 'Front stance depth', note: 'Back leg straighter, heel down.', date: d(5) });
   await addNote({ type: 'Sensei', kata: 'Heian Yondan', from: 'Sensei', title: 'Hips first, then hands', note: 'Drive the turn from the hips.', date: d(0) });
   await addNote({ type: 'Kata', kata: 'Bassai Dai', title: 'Opening feels rushed', note: 'Breathe before the first block. Count the pause after the double block.', pin: true, date: d(0) });
-  await addNote({ type: 'Goals', title: 'Bassai Dai ready for grading', note: 'Clean run three times in a row.', date: d(1) });
+  await addNote({ type: 'General', goal: true, title: 'Bassai Dai ready for grading', note: 'Clean run three times in a row.', date: d(1) });
   await addNote({ type: 'General', title: 'Bring a spare belt', note: '', date: d(40) });
   await page.waitForFunction(() => !document.querySelector('#sync') || !/Saving/.test(document.querySelector('#sync').textContent));
   await settle(page);
@@ -154,6 +155,23 @@ const settle = page => page.waitForTimeout(700);
   await page.click('[data-act=goal-done]');
   await settle(page);
   await shot(page, '07-goals');
+  assert.equal(await page.locator('.goal').count(), 1);
+  assert.equal(await page.locator('.tile:has-text("Goals")').count(), 0);
+
+  // any note can become a goal; editing shows a clear Save changes button
+  await page.click('.tab[data-v=notes]');
+  await page.click('.note:has-text("Keep guard up")');
+  await page.click('[data-act=edit-note]');
+  assert.ok((await page.textContent('.savebar .save')).includes('Save changes'));
+  await page.check('input[name=goal]');
+  await shot(page, '07b-edit-save-changes');
+  await page.click('.savebar .save');
+  await page.waitForSelector('#sheetWrap', { state: 'hidden' });
+  await settle(page);
+  assert.equal(await page.locator('.note:has-text("Keep guard up") .gbadge').count(), 1);
+  await page.click('.tab[data-v=goals]');
+  await settle(page);
+  assert.equal(await page.locator('.goal').count(), 2);
 
   // open a note, delete, undo
   await page.click('.tab[data-v=notes]');
@@ -182,7 +200,10 @@ const settle = page => page.waitForTimeout(700);
   assert.equal(st.state.kata[0].kiais, 2);
   assert.equal(st.state.kata[0].kiaiNotes, 'Gyaku Zuki\nClosed Fist Jiju Uke');
   assert.equal(st.state.kata[0].status, 'Polishing');
-  assert.equal(st.state.notes.find(n => n.type === 'Goals').done, true);
+  assert.equal(st.state.notes.find(n => n.title === 'Bassai Dai ready for grading').done, true);
+  assert.equal(st.state.notes.find(n => n.title === 'Bassai Dai ready for grading').goal, true);
+  assert.equal(st.state.notes.find(n => n.title === 'Keep guard up after kicking').type, 'Kumite');
+  assert.equal(st.state.notes.find(n => n.title === 'Keep guard up after kicking').goal, true);
   assert.deepEqual(errs, [], errs.join('\n'));
 
   /* ---------- someone else ---------- */
@@ -208,6 +229,26 @@ const settle = page => page.waitForTimeout(700);
   assert.ok((await o.page.textContent('#sync')).startsWith('View only'));
   await shot(o.page, '12-viewer');
   assert.deepEqual(o.errs, [], o.errs.join('\n'));
+
+  /* ---------- desktop ---------- */
+  const w = await phone(browser, 'tok-owner', { width: 1440, height: 900 });
+  await w.page.waitForSelector('#fakeG');
+  await w.page.click('#fakeG');
+  await w.page.waitForSelector('.nbrand');
+  await settle(w.page);
+  await shot(w.page, '13-desktop-notes');
+  await w.page.click('.note:has-text("Hips first")');
+  await shot(w.page, '14-desktop-note-panel');
+  await w.page.click('[data-act=edit-note]');
+  await shot(w.page, '15-desktop-edit');
+  await w.page.keyboard.press('Escape');
+  await w.page.keyboard.press('/');
+  assert.equal(await w.page.evaluate(() => document.activeElement.id), 'q');
+  await w.page.click('.tab[data-v=kata]');
+  await shot(w.page, '16-desktop-kata');
+  await w.page.click('.tab[data-v=goals]');
+  await shot(w.page, '17-desktop-goals');
+  assert.deepEqual(w.errs, [], w.errs.join('\n'));
 
   await browser.close();
   console.log('e2e passed; screenshots in ' + OUT);

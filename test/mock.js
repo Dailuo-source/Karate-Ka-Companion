@@ -79,6 +79,6 @@ function load(opts) {
   vm.runInContext(fs.readFileSync(__dirname + '/../Code.gs', 'utf8') + '\n;this.__api=api;this.__setup=setup;', ctx);
   ctx.__setup();
   props.CLIENT_ID = 'test-client.apps.googleusercontent.com';
-  return { api: b => JSON.parse(JSON.stringify(ctx.__api(b))), main, props, mail };
+  return { api: b => JSON.parse(JSON.stringify(ctx.__api(b))), setup: () => ctx.__setup(), main, props, mail };
 }
 module.exports = { load };

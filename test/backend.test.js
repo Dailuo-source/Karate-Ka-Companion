@@ -68,6 +68,20 @@ assert.equal(B.api({ session: S2 }).error, 'no_access');
 r = B.api({ session: S1, ops: [{ op: 'del', coll: 'notes', id: 'n1' }] });
 assert.equal(r.state.notes.length, 0);
 
+// goal flag on any note; old "Goals"-type rows become General + Goal on setup
+r = B.api({ session: S1, ops: [
+  { op: 'add', coll: 'notes', id: 'g1', data: { type: 'Kumite', title: 'Keep guard up', goal: true, date: day } },
+  { op: 'add', coll: 'notes', id: 'g2', data: { type: 'Goals', title: 'Old style goal', date: day } },
+] });
+assert.equal(r.state.notes.find(n => n.id === 'g1').goal, true);
+assert.equal(r.state.notes.find(n => n.id === 'g1').type, 'Kumite');
+B.setup();
+r = B.api({ session: S1 });
+const g2 = r.state.notes.find(n => n.id === 'g2');
+assert.equal(g2.type, 'General');
+assert.equal(g2.goal, true);
+assert.equal(r.state.notes.find(n => n.id === 'g1').type, 'Kumite');
+
 // sessions are stored hashed, never as the token itself
 assert.ok(!Object.keys(B.props).some(k => k.includes(S1)));
 console.log('backend tests passed');

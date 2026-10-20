@@ -189,6 +189,42 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.45;font-weight:600}
 .pillr input:checked+span{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .swrow{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:16px;padding:12px 14px;margin-top:14px;font-weight:800}
 .swrow input{width:22px;height:22px;accent-color:var(--accent)}
+.goalrow .star{width:30px;height:30px;flex-shrink:0;color:#1E2235}
+.swsub{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px}
+.gbadge{display:inline-flex;align-items:center;margin-left:8px;padding:1px 8px;border-radius:999px;background:#FFD66B;color:#3A2A00;font-size:11px;font-weight:900;vertical-align:1px}
+.savebar{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom));display:flex;gap:10px;margin:18px -18px calc(-24px - env(safe-area-inset-bottom));padding:12px 18px calc(14px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);z-index:2}
+.savebar .btn{flex:1 1 0}
+.savebar .btn.save{flex:2 1 0;background:var(--ok);color:#0D2E21;border-color:transparent;font-weight:900;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+[data-theme=light] .savebar .btn.save{color:#FFFFFF}
+.savebar .btn.save svg{width:20px;height:20px}
+/* ---------- big screens: sidebar nav, wider content, notes open in a side panel ---------- */
+.nbrand{display:none}
+@media (min-width:1000px){
+  #app{max-width:none;margin:0 0 0 240px;padding:8px 48px 80px}
+  #app>:not(.nav):not(.fab){max-width:920px}
+  .nav{top:0;bottom:0;right:auto;width:240px;border-top:0;border-right:1px solid var(--line);padding:22px 14px}
+  .nbrand{display:flex;align-items:center;gap:10px;padding:0 6px 22px;font-weight:900;font-size:17px;line-height:1.15}
+  .nav .in{flex-direction:column;justify-content:flex-start;height:auto;gap:6px;max-width:none}
+  .tab{flex-direction:row;justify-content:flex-start;gap:12px;width:100%;min-height:48px;padding:0 14px;font-size:15px;border-radius:14px}
+  .tab svg{width:22px;height:22px}
+  .tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+  .tab:hover:not([aria-selected="true"]){background:var(--line)}
+  .top .ttl h1{display:none}
+  .top>svg{display:none}
+  .heroes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .note,.hero,.goal .nbody,.opt{cursor:pointer}
+  .note:hover,.hero:hover{filter:brightness(1.08)}
+  .fab{right:40px;bottom:40px}
+  .toast{left:calc(50% + 120px);bottom:32px}
+  #sheetWrap{justify-content:flex-end;align-items:stretch}
+  .sheet{max-width:480px;max-height:none;height:100dvh;border-radius:26px 0 0 26px;padding:22px 26px 24px;animation:sidein .2s ease-out}
+  .savebar{margin:18px -26px -24px;padding:14px 26px 18px;bottom:-24px}
+  .kbd-hint{display:block}
+}
+@keyframes sidein{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
+.kbd-hint{display:none;margin-top:14px;font-size:12px;color:var(--muted)}
+.kbd-hint b{font-weight:900;color:var(--ink)}
+
 .view-body{white-space:pre-wrap;font-size:16px;font-weight:600;line-height:1.5;margin-top:10px}
 .opt{display:flex;align-items:center;width:100%;min-height:52px;padding:0 14px;border-radius:14px;background:var(--surface);font-weight:800;margin-top:8px;text-align:left}
 .opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
@@ -229,7 +265,8 @@ const CLIENT_ID = "506844080576-q8tj69t28ht96meivgu35c7k89p5gl8k.apps.googleuser
 const KATA_SITE = "https://dailuo-source.github.io/SKA-Kata-Tracker/";
 
 const TYPES=[{k:"Kata",c:"kata",s:"Kata"},{k:"Kihon",c:"kihon",s:"Kihon"},{k:"Kumite",c:"kumite",s:"Kumite"},
-  {k:"Sensei says",c:"sensei",s:"Sensei says"},{k:"Goals",c:"goals",s:"Goals"},{k:"General",c:"general",s:"General"}];
+  {k:"Sensei says",c:"sensei",s:"Sensei says"},{k:"General",c:"general",s:"General"}];
+/* Goals are a flag on any note (n.goal), not a type. Old "Goals" notes read as General + goal. */
 const FROM=[{k:"Me",s:"My own note"},{k:"Sensei",s:"Sensei"},{k:"Seminar",s:"Seminar"}];
 const STATUSES=["Learning","Polishing","Solid"];
 
@@ -238,7 +275,7 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 const eqi=(a,b)=>String(a==null?"":a).trim().toLowerCase()===String(b==null?"":b).trim().toLowerCase();
 const LS={get(k,d){try{const v=localStorage.getItem("kc."+k);return v==null?d:v;}catch(e){return d;}},
   set(k,v){try{localStorage.setItem("kc."+k,v);}catch(e){}},del(k){try{localStorage.removeItem("kc."+k);}catch(e){}}};
-const typeOf=k=>TYPES.find(t=>eqi(t.k,k))||TYPES[5];
+const typeOf=k=>TYPES.find(t=>eqi(t.k,k))||TYPES[TYPES.length-1];
 
 /* ---------- dates ---------- */
 const pad=n=>String(n).padStart(2,"0");
@@ -315,7 +352,7 @@ function normalize(st){
   return{
     notes:(st.notes||[]).map(r=>Object.assign({},r,{type:typeOf(r.type).k,date:+r.date||+r.added||Date.now(),added:+r.added||0,
       title:str(r.title),note:String(r.note==null?"":r.note),kata:str(r.kata),from:FROM.find(f=>eqi(f.k,r.from))?FROM.find(f=>eqi(f.k,r.from)).k:"Me",
-      video:str(r.video),pinned:!!r.pinned,done:!!r.done})),
+      video:str(r.video),pinned:!!r.pinned,goal:!!r.goal||eqi(r.type,"Goals"),done:!!r.done})),
     kata:(st.kata||[]).map(r=>Object.assign({},r,{kata:str(r.kata),status:STATUSES.find(s=>eqi(s,r.status))||"",kiais:r.kiais==null||r.kiais===""?null:+r.kiais,reminders:String(r.reminders==null?"":r.reminders),kiaiNotes:String(r.kiaiNotes==null?"":r.kiaiNotes)})),
     access:(st.access||[]).map(r=>Object.assign({},r,{email:str(r.email),status:str(r.status)||"Requested"})),
     kataList:Array.isArray(st.kataList)?st.kataList:[]
@@ -474,18 +511,19 @@ function header(){
 }
 function nav(){
   const t=(k,lbl,ic)=>`<button class="tab" role="tab" data-act="tab" data-v="${k}" aria-selected="${tab===k}">${ic}${lbl}</button>`;
-  return `<nav class="nav" aria-label="Sections"><div class="in" role="tablist">${t("notes","Notes",I.notes)}${t("kata","Kata",I.kata)}${t("goals","Goals",I.star)}</div></nav>`;
+  return `<nav class="nav" aria-label="Sections"><div class="nbrand">${mascot("happy").replace('class="m"','width="46" height="46" aria-hidden="true"')}<span>Karate-Ka<br>Companion</span></div><div class="in" role="tablist">${t("notes","Notes",I.notes)}${t("kata","Kata",I.kata)}${t("goals","Goals",I.star)}</div></nav>`;
 }
+const GBADGE=`<span class="gbadge">★ Goal</span>`;
 function noteCard(n){
   const t=typeOf(n.type),title=noteTitle(n);
   const meta=[`<b>${esc(t.s)}</b>`,n.kata&&title!==n.kata?esc(n.kata):"",n.from!=="Me"?esc(n.from):""].filter(Boolean).join(" · ");
   const snip=n.title||n.type!=="Kata"||!n.kata?String(n.note||"").replace(/\s+/g," "):String(n.note||"").replace(/\s+/g," ");
   return `<button class="note t-${t.c}" data-act="open-note" data-id="${esc(n.id)}"><span class="ico">${icon(t.c)}</span>
-    <span class="nbody"><span class="meta">${meta}</span><span class="ntitle">${esc(title)}</span>${snip&&snip!==title?`<span class="nsnip">${esc(snip)}</span>`:""}</span>
+    <span class="nbody"><span class="meta">${meta}${n.goal?GBADGE:""}</span><span class="ntitle">${esc(title)}</span>${snip&&snip!==title?`<span class="nsnip">${esc(snip)}</span>`:""}</span>
     ${n.pinned?`<span class="pin" aria-label="Pinned">${I.pin}</span>`:""}</button>`;
 }
 function viewNotes(){
-  const pinned=S.notes.filter(n=>n.pinned&&!(n.type==="Goals"&&n.done)).sort((a,b)=>byDate(b,a)).slice(0,3);
+  const pinned=S.notes.filter(n=>n.pinned&&!(n.goal&&n.done)).sort((a,b)=>byDate(b,a)).slice(0,3);
   const heroes=pinned.length?`<div class="heroes">${pinned.map(n=>`<button class="hero" data-act="open-note" data-id="${esc(n.id)}">
       <svg class="star" viewBox="0 0 32 32" aria-hidden="true">${ICONS.goals.replace(/currentColor/g,"#1E2235")}</svg>
       <span class="grow"><span class="lbl" style="display:block">Working on</span><span class="big">${esc([n.kata&&noteTitle(n)!==n.kata?n.kata:"",noteTitle(n)].filter(Boolean).join(" · "))}</span></span>
@@ -507,11 +545,11 @@ function notesList(){
   return `<div class="list">${out}</div>`;
 }
 function viewGoals(){
-  const goals=S.notes.filter(n=>n.type==="Goals");
+  const goals=S.notes.filter(n=>n.goal);
   const open=goals.filter(n=>!n.done).sort((a,b)=>byDate(b,a)),done=goals.filter(n=>n.done).sort((a,b)=>byDate(b,a));
   const row=n=>`<div class="goal ${n.done?"done":""}"><button class="check" data-act="goal-done" data-id="${esc(n.id)}" aria-pressed="${n.done}" aria-label="${n.done?"Mark not done":"Mark done"}" ${ROLE!=="owner"?"disabled":""}>${n.done?I.check:icon("goals")}</button>
-    <button class="nbody" data-act="open-note" data-id="${esc(n.id)}"><span class="meta">${esc(relDay(dayKey(n.date)))}${n.kata?" · "+esc(n.kata):""}</span><span class="ntitle">${esc(noteTitle(n))}</span>${n.title&&n.note?`<span class="nsnip">${esc(n.note)}</span>`:""}</button></div>`;
-  if(!goals.length)return `<div class="empty">${mascot("happy")}No goals yet.${ROLE==="owner"?"<br>Tap + to set one.":""}</div>`;
+    <button class="nbody" data-act="open-note" data-id="${esc(n.id)}"><span class="meta"><b style="color:var(--t-ink,inherit)">${esc(typeOf(n.type).s)}</b> · ${esc(relDay(dayKey(n.date)))}${n.kata?" · "+esc(n.kata):""}</span><span class="ntitle">${esc(noteTitle(n))}</span>${n.title&&n.note?`<span class="nsnip">${esc(n.note)}</span>`:""}</button></div>`;
+  if(!goals.length)return `<div class="empty">${mascot("happy")}No goals yet.${ROLE==="owner"?"<br>Tap + to write one, or tick \"Mark as a goal\" on any note.":""}</div>`;
   return `<div class="list"><h2 class="dhead">Working towards</h2>${open.map(row).join("")||'<p class="sub">All done. Time for a new one!</p>'}
     ${done.length?`<h2 class="dhead" style="margin-top:10px">Done</h2>${done.map(row).join("")}`:""}</div>`;
 }
@@ -594,7 +632,7 @@ function noteSheet(id){
   const n=S.notes.find(x=>x.id===id);if(!n)return shead("Note")+'<p class="sub">This note was removed.</p>';
   const t=typeOf(n.type),can=ROLE==="owner";
   return shead(noteTitle(n))+`<div class="row t-${t.c}" style="gap:10px"><span class="ico">${icon(t.c)}</span>
-    <div><div class="meta"><b>${esc(t.s)}</b>${n.from!=="Me"?" · from "+esc(n.from):""}</div><div style="font-weight:800">${esc(fmtDay(dayKey(n.date),true))}</div></div></div>
+    <div><div class="meta"><b>${esc(t.s)}</b>${n.from!=="Me"?" · from "+esc(n.from):""}${n.goal?GBADGE:""}</div><div style="font-weight:800">${esc(fmtDay(dayKey(n.date),true))}</div></div></div>
     ${n.kata?`<button class="opt" data-act="open-kata" data-v="${esc(n.kata)}">${esc(n.kata)}<span class="grow"></span><span style="width:18px;height:18px">${I.right}</span></button>`:""}
     ${n.note?`<div class="view-body">${esc(n.note)}</div>`:""}
     ${n.video?`<p style="margin-top:14px"><a href="${esc(/^https?:\/\//i.test(n.video)?n.video:"https://"+n.video)}" target="_blank" rel="noopener" style="font-weight:800;display:inline-flex;gap:6px;align-items:center"><span style="width:20px;height:20px;display:inline-flex">${I.video}</span>Watch video</a></p>`:""}
@@ -604,7 +642,7 @@ function noteSheet(id){
 }
 function formSheet(f){
   const n=f.id?S.notes.find(x=>x.id===f.id):null;
-  const v=n||{type:f.preType||(typeF!=="All"?typeF:"Kata"),kata:f.preKata||"",date:Date.now(),from:"Me",title:"",note:"",video:"",pinned:false};
+  const v=n||{type:f.preType||(typeF!=="All"?typeF:f.preGoal?"General":"Kata"),kata:f.preKata||"",date:Date.now(),from:"Me",title:"",note:"",video:"",pinned:false,goal:!!f.preGoal};
   const names=kataNames();if(v.kata&&!names.some(k=>eqi(k.name,v.kata)))names.push({name:v.kata});
   return `<form id="noteForm" novalidate>`+shead(n?"Edit note":"New note")+`
     <fieldset style="border:none;margin:0;padding:0"><legend class="legend" style="padding:0 0 8px">What kind?</legend><div class="tiles">
@@ -617,17 +655,19 @@ function formSheet(f){
     <label class="field"><span>Title</span><input class="inp" name="title" value="${esc(v.title)}" maxlength="140" placeholder="A few words"></label>
     <label class="field"><span>Note</span><textarea class="inp" name="note" rows="5" placeholder="What did you learn or notice?">${esc(v.note)}</textarea></label>
     <label class="field"><span>Video link (optional)</span><input class="inp" type="url" name="video" value="${esc(v.video)}" placeholder="https://…" inputmode="url"></label>
+    <label class="swrow goalrow"><span class="star">${icon("goals")}</span><span class="grow">Mark as a goal<span class="swsub">Shows on the Goals tab, whatever the note type</span></span><input type="checkbox" name="goal" ${v.goal?"checked":""}></label>
     <label class="swrow"><span class="grow">Pin to "Working on"</span><input type="checkbox" name="pinned" ${v.pinned?"checked":""}></label>
-    <div class="btns"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></form>`;
+    <div class="savebar"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn save">${I.check}${n?"Save changes":"Save note"}</button></div>
+    <p class="kbd-hint"><b>Ctrl+S</b> saves · <b>Esc</b> cancels</p></form>`;
 }
 function saveNote(form){
   const fd=new FormData(form);const s=k=>String(fd.get(k)||"").trim();
   const data={type:s("type")||"General",kata:s("kata"),date:keyDate(s("date")||todayKey()).getTime(),from:s("from")||"Me",
-    title:s("title"),note:String(fd.get("note")||"").replace(/\s+$/,""),video:s("video"),pinned:!!fd.get("pinned")};
+    title:s("title"),note:String(fd.get("note")||"").replace(/\s+$/,""),video:s("video"),pinned:!!fd.get("pinned"),goal:!!fd.get("goal")};
   if(!data.title&&!data.note.trim()){toast("Write a title or a note first.");return;}
   const editing=sheet.id;
   if(editing)store.update("notes",editing,data);else store.add("notes",Object.assign({added:Date.now(),done:false},data));
-  closeSheet();toast(editing?"Saved":"Note saved");
+  closeSheet();toast(editing?"Changes saved":"Note saved");
 }
 function dateSheet(){
   const months=[...new Set(S.notes.map(n=>dayKey(n.date).slice(0,7)))].sort().reverse().slice(0,18);
@@ -676,7 +716,7 @@ document.addEventListener("click",e=>{
     case"account":openSheet({type:"account"});break;
     case"sync":flush();break;
     case"close":closeSheet();break;
-    case"new":openSheet({type:"form",preType:tab==="goals"?"Goals":"",preKata:tab==="kata"&&kataOpen?kataOpen:""});break;
+    case"new":openSheet({type:"form",preType:"",preGoal:tab==="goals",preKata:tab==="kata"&&kataOpen?kataOpen:""});break;
     case"new-kata-note":openSheet({type:"form",preType:"Kata",preKata:kataOpen});break;
     case"open-note":openSheet({type:"note",id});break;
     case"edit-note":openSheet({type:"form",id});break;
@@ -715,7 +755,14 @@ document.addEventListener("input",e=>{
   if(e.target.id==="kq"){kq=e.target.value;$("#klist").innerHTML=kataRows();}
 });
 document.addEventListener("change",e=>{if(e.target.id==="pickMonth"&&e.target.value){dateF=e.target.value;closeSheet();render();}});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheet)closeSheet();});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&sheet){closeSheet();return;}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){const f=$("#noteForm");if(f){e.preventDefault();f.requestSubmit();}return;}
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test((e.target&&e.target.tagName)||"")||(e.target&&e.target.isContentEditable);
+  if(typing||sheet||e.ctrlKey||e.metaKey||e.altKey||auth!=="ok"||!ready)return;
+  if(e.key==="/"){const s=$("#q")||$("#kq");if(s){e.preventDefault();s.focus();}}
+  else if(e.key==="n"&&ROLE==="owner"&&!(tab==="kata"&&!kataOpen)){e.preventDefault();openSheet({type:"form",preType:tab==="kata"&&kataOpen?"Kata":"",preGoal:tab==="goals",preKata:tab==="kata"&&kataOpen?kataOpen:""});}
+});
 /* Phone back button: keep one guard entry in history so Back steps out of the app's own screens
    (panel → kata page → Notes tab) instead of closing the app. On the Notes tab, Back asks once more. */
 let exitArmed=false,exitT;

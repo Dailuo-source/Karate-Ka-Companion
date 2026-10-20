@@ -2,7 +2,7 @@
  * Karate-Ka Companion — Google Sheets backend
  *
  * The Sheet is the database:
- *   Notes    — one row per note (dated), typed Kata / Kihon / Kumite / Sensei says / Goals / General
+ *   Notes    — one row per note (dated), typed Kata / Kihon / Kumite / Sensei says / General; any note can be ticked as a Goal
  *   My kata  — your own view of each kata: how it feels, how many kiais it has, key reminders
  *   Access   — other Google accounts that asked to see your notes. Set Status to Approved to let one in
  *              (view only). Leave it Requested or set Denied to keep them out.
@@ -20,7 +20,7 @@ const APP_SITE = 'https://karate-ka-companion.pages.dev/';
 const KATA_TRACKER_SHEET_ID = '1QYVdiW5kZ5j-EvSQzZJ-GE12ZqwY2OUgTsSIzIloiHk';
 const KATA_TAB = 'Kata';
 
-const TYPES = ['Kata', 'Kihon', 'Kumite', 'Sensei says', 'Goals', 'General'];
+const TYPES = ['Kata', 'Kihon', 'Kumite', 'Sensei says', 'General']; // Goals is a flag (Goal column), not a type
 const SOURCES = ['Me', 'Sensei', 'Seminar'];
 const STATUSES = ['Learning', 'Polishing', 'Solid'];
 const ACCESS = ['Requested', 'Approved', 'Denied'];
@@ -40,6 +40,7 @@ const SCHEMA = {
       ['from', 'Who said it', 'from', 95],
       ['video', 'Video link', 'text', 160],
       ['pinned', 'Pinned', 'bool', 65],
+      ['goal', 'Goal', 'bool', 65],
       ['done', 'Done (goals)', 'bool', 90],
       ['added', 'Added', 'datetime', 150],
       ['updated', 'Updated', 'datetime', 150],
@@ -469,6 +470,7 @@ function setup() {
   ownerEmail_();
 
   Object.keys(SCHEMA).forEach(function (coll) { buildTab_(ss, SCHEMA[coll]); });
+  const moved = migrateGoals_(ss);
 
   ['Sheet1', 'Sheet 1'].forEach(function (n) {
     const blank = ss.getSheetByName(n);
@@ -479,6 +481,7 @@ function setup() {
   const n = kataList_().length;
 
   const msg = APP_NAME + ' is set up.\n\nKata read from the Kata Tracker: ' + n + '.' +
+    (moved ? '\n\nOld "Goals" notes changed to General notes ticked as a Goal: ' + moved + '.' : '') +
     (props.getProperty('CLIENT_ID') ? '' : '\n\nNext: ' + APP_NAME + ' → Set Google sign-in client ID…');
   console.log(msg);
   try { SpreadsheetApp.getUi().alert(msg); } catch (e) { /* run from the editor: see the log */ }
@@ -514,6 +517,27 @@ function colLetter_(n) {
   let s = '';
   while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
   return s;
+}
+
+// Goals used to be a note type. Turn those rows into General notes with the Goal box ticked.
+function migrateGoals_(ss) {
+  const sh = ss.getSheetByName(SCHEMA.notes.sheet);
+  if (!sh || sh.getLastRow() < 2) return 0;
+  const width = sh.getLastColumn();
+  const cols = headerMap_(sh.getRange(1, 1, 1, width).getValues()[0], SCHEMA.notes);
+  if (cols.type == null || cols.goal == null) return 0;
+  const n = sh.getLastRow() - 1;
+  const types = sh.getRange(2, cols.type + 1, n, 1).getValues();
+  const goals = sh.getRange(2, cols.goal + 1, n, 1).getValues();
+  let moved = 0;
+  types.forEach(function (r, i) {
+    if (String(r[0]).trim().toLowerCase() === 'goals') { r[0] = 'General'; goals[i][0] = true; moved++; }
+  });
+  if (moved) {
+    sh.getRange(2, cols.type + 1, n, 1).setValues(types);
+    sh.getRange(2, cols.goal + 1, n, 1).setValues(goals);
+  }
+  return moved;
 }
 
 function buildTab_(ss, sch) {

@@ -237,10 +237,33 @@ const settle = page => page.waitForTimeout(700);
   await w.page.waitForSelector('.nbrand');
   await settle(w.page);
   await shot(w.page, '13-desktop-notes');
+  // empty panel waits on the right; content fills the width between sidebar and panel
+  assert.equal(await w.page.locator('#sheet .pane-empty').count(), 1);
+  const box = await w.page.locator('.note').first().boundingBox();
+  assert.ok(box.x + box.width > 1440 * 0.6, 'list spans the width: ' + JSON.stringify(box));
+  // sidebar has the note types and Settings
+  assert.equal(await w.page.locator('.nside .ntype').count(), 6);
+  assert.equal(await w.page.locator('.nfoot .nset').count(), 1);
+  await w.page.click('.ntype:has-text("Kumite")');
+  assert.equal(await w.page.locator('#list .note').count(), 1);
+  await w.page.click('.ntype:has-text("All notes")');
+  // open a note: no dark overlay, the list stays clickable, the next note replaces it
   await w.page.click('.note:has-text("Hips first")');
   await shot(w.page, '14-desktop-note-panel');
+  await w.page.click('.note:has-text("Front stance")', { timeout: 3000 });
+  assert.ok((await w.page.textContent('#sheet .shead h2')).includes('Front stance'));
+  assert.equal(await w.page.locator('.note.active').count(), 1);
+  await w.page.click('.note:has-text("Hips first")');
   await w.page.click('[data-act=edit-note]');
   await shot(w.page, '15-desktop-edit');
+  // unsaved edit: another note doesn't silently throw it away
+  await w.page.fill('textarea[name=note]', 'Drive the turn from the hips. Changed.');
+  await w.page.click('.note:has-text("Front stance")');
+  assert.ok(await w.page.locator('#noteForm').count() === 1, 'edit kept');
+  await w.page.keyboard.press('Escape');
+  assert.equal(await w.page.locator('#sheet .pane-empty').count(), 1);
+  await w.page.click('.nset');
+  await shot(w.page, '15b-desktop-settings');
   await w.page.keyboard.press('Escape');
   await w.page.keyboard.press('/');
   assert.equal(await w.page.evaluate(() => document.activeElement.id), 'q');

@@ -197,28 +197,47 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.45;font-weight:600}
 .savebar .btn.save{flex:2 1 0;background:var(--ok);color:#0D2E21;border-color:transparent;font-weight:900;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 [data-theme=light] .savebar .btn.save{color:#FFFFFF}
 .savebar .btn.save svg{width:20px;height:20px}
-/* ---------- big screens: sidebar nav, wider content, notes open in a side panel ---------- */
-.nbrand{display:none}
+/* ---------- big screens: sidebar (sections, note types, settings) · full-width list · docked note panel ---------- */
+.nbrand,.nside,.nfoot{display:none}
 @media (min-width:1000px){
-  #app{max-width:none;margin:0 0 0 240px;padding:8px 48px 80px}
-  #app>:not(.nav):not(.fab){max-width:920px}
-  .nav{top:0;bottom:0;right:auto;width:240px;border-top:0;border-right:1px solid var(--line);padding:22px 14px}
-  .nbrand{display:flex;align-items:center;gap:10px;padding:0 6px 22px;font-weight:900;font-size:17px;line-height:1.15}
-  .nav .in{flex-direction:column;justify-content:flex-start;height:auto;gap:6px;max-width:none}
-  .tab{flex-direction:row;justify-content:flex-start;gap:12px;width:100%;min-height:48px;padding:0 14px;font-size:15px;border-radius:14px}
+  :root{--side:248px;--pane:clamp(360px,30vw,500px)}
+  #app{max-width:none;margin:0 var(--pane) 0 var(--side);padding:8px 36px 80px}
+  .nav{top:0;bottom:0;right:auto;width:var(--side);border-top:0;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+  .nbrand{display:flex;align-items:center;gap:10px;padding:0 6px 16px;font-weight:900;font-size:17px;line-height:1.15}
+  .nav .in{flex-direction:column;justify-content:flex-start;height:auto;gap:4px;max-width:none;margin:0}
+  .tab{flex-direction:row;justify-content:flex-start;gap:12px;width:100%;min-height:46px;padding:0 14px;font-size:15px;border-radius:14px}
   .tab svg{width:22px;height:22px}
   .tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
-  .tab:hover:not([aria-selected="true"]){background:var(--line)}
-  .top .ttl h1{display:none}
-  .top>svg{display:none}
-  .heroes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tab:hover:not([aria-selected="true"]),.ntype:hover:not([aria-pressed="true"]),.nset:hover{background:var(--line)}
+  .nside{display:flex;flex-direction:column;gap:2px;margin-top:14px}
+  .nnew{width:100%;margin-bottom:14px}
+  .nnew svg{width:20px;height:20px}
+  .nhead{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:4px 10px 6px}
+  .ntype{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:4px 10px;border-radius:12px;font-size:14px;font-weight:800;color:var(--ink);text-align:left}
+  .ntype .ico{width:32px;height:32px;border-radius:10px}
+  .ntype .ico svg{width:24px;height:24px}
+  .t-all{--tf:var(--line);--ti:var(--ink)}
+  .ntype .cnt{font-size:12px;font-weight:800;color:var(--muted)}
+  .ntype[aria-pressed="true"]{background:var(--tf);color:var(--ti)}
+  .ntype[aria-pressed="true"] .cnt{color:inherit}
+  .nfoot{display:block;margin-top:auto;padding-top:14px}
+  .nset{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border-radius:14px;background:var(--surface);text-align:left}
+  .nset b{display:block;font-size:14px;font-weight:900}
+  .nset .sub{display:block;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+  .nav-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:var(--head);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center}
+  .typechips,.fab,.top .ibtn,.top>svg,.top .ttl h1{display:none}
+  .heroes{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
   .note,.hero,.goal .nbody,.opt{cursor:pointer}
   .note:hover,.hero:hover{filter:brightness(1.08)}
-  .fab{right:40px;bottom:40px}
-  .toast{left:calc(50% + 120px);bottom:32px}
-  #sheetWrap{justify-content:flex-end;align-items:stretch}
-  .sheet{max-width:480px;max-height:none;height:100dvh;border-radius:26px 0 0 26px;padding:22px 26px 24px;animation:sidein .2s ease-out}
-  .savebar{margin:18px -26px -24px;padding:14px 26px 18px;bottom:-24px}
+  .note.active,.hero.active{box-shadow:0 0 0 2px var(--accent)}
+  .goal .nbody.active{outline:2px solid var(--accent);outline-offset:4px;border-radius:12px}
+  .toast{left:calc(var(--side) + (100vw - var(--side) - var(--pane)) / 2);bottom:32px;width:min(520px,calc(100vw - var(--side) - var(--pane) - 48px))}
+  #sheetWrap,#sheetWrap[hidden]{display:flex;position:fixed;top:0;right:0;bottom:0;left:auto;width:var(--pane);z-index:4;background:var(--bg);border-left:1px solid var(--line);align-items:stretch;justify-content:stretch}
+  .sheet{max-width:none;width:100%;height:100dvh;max-height:none;border-radius:0;background:var(--bg);padding:22px 24px 24px;animation:none}
+  .savebar{margin:18px -24px -24px;padding:14px 24px 18px;bottom:-24px}
+  .pane-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-weight:700;text-align:center}
+  .pane-empty .m{width:72px;height:72px;opacity:.8}
+  .pane-empty p{margin:0}
   .kbd-hint{display:block}
 }
 @keyframes sidein{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
@@ -498,7 +517,8 @@ function render(){
   else html=header()+(tab==="kata"?viewKataList():tab==="goals"?viewGoals():viewNotes());
   app.innerHTML=html+nav()+(ROLE==="owner"&&!(tab==="kata"&&!kataOpen)?`<button class="fab" data-act="new" aria-label="New note">${I.plus}</button>`:"");
   setSync(syncState||"ok");
-  replayTap();
+  replayTap();markActive();
+  if(wide()&&!sheet){const b=$("#sheet");if(b&&!b.querySelector(".pane-empty"))b.innerHTML=paneEmpty();}
 }
 function authScreen(mood,title,body,extra){
   return `<div class="auth">${mascot(mood)}<div><h1>${esc(title)}</h1>${body?`<p style="margin-top:8px">${body}</p>`:""}</div>${extra}</div>`;
@@ -510,10 +530,21 @@ function header(){
     <button class="ibtn" data-act="account" aria-label="Account, theme and access"><span class="avatar">${letter}</span></button></header>`;
 }
 function nav(){
+  const letter=esc((EMAIL||"?").charAt(0).toUpperCase());
+  const types=[{k:"All",c:"",s:"All notes"}].concat(TYPES).map(t=>{const n=t.k==="All"?S.notes.length:S.notes.filter(x=>x.type===t.k).length;
+    return`<button class="ntype ${t.c?"t-"+t.c:"t-all"}" data-act="navtype" data-v="${esc(t.k)}" aria-pressed="${tab==="notes"&&!kataOpen&&typeF===t.k}"><span class="ico">${t.c?icon(t.c):I.notes}</span><span class="grow">${esc(t.s||t.k)}</span><span class="cnt">${n}</span></button>`;}).join("");
+  const side=`<div class="nside">${ROLE==="owner"?`<button class="btn primary nnew" data-act="new">${I.plus}New note</button>`:""}<div class="nhead">Note types</div>${types}</div>
+    <div class="nfoot"><button class="nset" data-act="account"><span class="nav-av">${letter}</span><span class="grow"><b>Settings</b><span class="sub">${esc(EMAIL)}</span></span></button></div>`;
   const t=(k,lbl,ic)=>`<button class="tab" role="tab" data-act="tab" data-v="${k}" aria-selected="${tab===k}">${ic}${lbl}</button>`;
-  return `<nav class="nav" aria-label="Sections"><div class="nbrand">${mascot("happy").replace('class="m"','width="46" height="46" aria-hidden="true"')}<span>Karate-Ka<br>Companion</span></div><div class="in" role="tablist">${t("notes","Notes",I.notes)}${t("kata","Kata",I.kata)}${t("goals","Goals",I.star)}</div></nav>`;
+  return `<nav class="nav" aria-label="Sections"><div class="nbrand">${mascot("happy").replace('class="m"','width="46" height="46" aria-hidden="true"')}<span>Karate-Ka<br>Companion</span></div><div class="in" role="tablist">${t("notes","Notes",I.notes)}${t("kata","Kata",I.kata)}${t("goals","Goals",I.star)}</div>${side}</nav>`;
 }
 const GBADGE=`<span class="gbadge">★ Goal</span>`;
+/* Big screens (Gary, Oct 20): the panel is a docked column on the right, not a dark overlay.
+   The list stays clickable and a new note replaces the open one. */
+const WIDE=matchMedia("(min-width:1000px)");const wide=()=>WIDE.matches;
+const paneEmpty=()=>`<div class="pane-empty">${mascot("sleepy")}<p>Pick a note to read it here.</p></div>`;
+function markActive(){const cur=sheet&&(sheet.type==="note"||sheet.type==="form")?sheet.id:null;
+  document.querySelectorAll("#app [data-act=open-note]").forEach(el=>el.classList.toggle("active",!!cur&&el.dataset.id===cur));}
 function noteCard(n){
   const t=typeOf(n.type),title=noteTitle(n);
   const meta=[`<b>${esc(t.s)}</b>`,n.kata&&title!==n.kata?esc(n.kata):"",n.from!=="Me"?esc(n.from):""].filter(Boolean).join(" · ");
@@ -530,7 +561,7 @@ function viewNotes(){
       <span style="width:20px;height:20px;color:var(--hero-muted)">${I.right}</span></button>`).join("")}</div>`:"";
   const chips=[{k:"All",c:""}].concat(TYPES).map(t=>`<button class="chip ${t.c?"t-"+t.c:""}" data-act="type" data-v="${esc(t.k)}" aria-pressed="${typeF===t.k}">${esc(t.s||t.k)}</button>`).join("");
   return `<div class="search">${I.search}<label for="q" class="sr">Search notes</label><input id="q" type="search" placeholder="Search notes, kata, sensei…" value="${esc(q)}" autocomplete="off"></div>
-    <div class="chips" role="group" aria-label="Note type">${chips}</div>
+    <div class="chips typechips" role="group" aria-label="Note type">${chips}</div>
     ${heroes}
     <div class="row pad" style="margin-top:12px"><button class="sbtn" data-act="datef">${I.cal}${esc(dateLabel())}<span style="width:14px;height:14px;display:inline-flex">${I.down}</span></button>
       <span class="grow"></span><button class="sbtn" data-act="sort" aria-label="Sort order: ${sortNew?"newest first":"oldest first"}">${I.sort}${sortNew?"Newest first":"Oldest first"}</button></div>
@@ -621,9 +652,10 @@ function kataPage(name){
 }
 
 /* ---------- panels ---------- */
-function openSheet(s){hideToast();if(!sheet)lastFocus=document.activeElement;sheet=s;renderSheet();$("#sheetWrap").hidden=false;document.body.style.overflow="hidden";
+function openSheet(s){if(wide()&&sheet&&sheet.dirty&&!(s.type==="form"&&s.id&&s.id===sheet.id)){toast("Save or cancel your changes first.");return;}
+  hideToast();if(!sheet)lastFocus=document.activeElement;sheet=s;renderSheet();$("#sheetWrap").hidden=false;$("#sheet").setAttribute("aria-modal",wide()?"false":"true");document.body.style.overflow=wide()?"":"hidden";markActive();if(wide())$("#sheet").scrollTop=0;
   setTimeout(()=>{const f=$("#sheet [autofocus]")||$("#sheet .close");if(f)f.focus();},40);}
-function closeSheet(){sheet=null;const w=$("#sheetWrap");if(w)w.hidden=true;document.body.style.overflow="";if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
+function closeSheet(){sheet=null;const w=$("#sheetWrap");if(w)w.hidden=true;document.body.style.overflow="";if(wide())$("#sheet").innerHTML=paneEmpty();markActive();if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
 function renderSheet(){if(!sheet)return;const b=$("#sheet");
   b.innerHTML=sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):sheet.type==="kiai"?kiaiSheet(sheet.name):accountSheet();
   b.setAttribute("aria-label",sheet.type==="form"?"Note":sheet.type);replayTap();}
@@ -704,12 +736,13 @@ function onData(){if(auth!=="ok"||!ready)return;render();if(sheet&&sheet.type!==
 
 /* ---------- taps ---------- */
 document.addEventListener("click",e=>{
-  if(e.target.id==="sheetWrap"){closeSheet();return;}
+  if(e.target.id==="sheetWrap"&&!wide()){closeSheet();return;}
   const b=e.target.closest("[data-act]");if(!b||b.disabled)return;
   const a=b.dataset.act,id=b.dataset.id,v=b.dataset.v;
   switch(a){
     case"tab":tab=v;LS.set("tab",v);if(v!=="kata")kataOpen=null;render();window.scrollTo(0,0);break;
     case"type":typeF=v;render();break;
+    case"navtype":typeF=v;tab="notes";kataOpen=null;kiaiOpen=false;LS.set("tab","notes");render();window.scrollTo(0,0);break;
     case"sort":sortNew=!sortNew;LS.set("sort",sortNew?"new":"old");render();break;
     case"datef":openSheet({type:"date"});break;
     case"setdate":dateF=v;closeSheet();render();break;
@@ -767,6 +800,8 @@ document.addEventListener("keydown",e=>{
    (panel → kata page → Notes tab) instead of closing the app. On the Notes tab, Back asks once more. */
 let exitArmed=false,exitT;
 const guardBack=()=>{try{history.pushState({kc:1},"");}catch(e){}};
+WIDE.addEventListener("change",()=>{document.body.style.overflow=sheet&&!wide()?"hidden":"";if(sheet)renderSheet();else{$("#sheet").innerHTML=wide()?paneEmpty():"";}render();});
+["input","change"].forEach(ev=>document.addEventListener(ev,e=>{if(sheet&&sheet.type==="form"&&e.target.closest&&e.target.closest("#noteForm"))sheet.dirty=true;}));
 window.addEventListener("popstate",()=>{
   if(exitArmed)return; // second Back on the home screen: let the app close
   if(sheet)closeSheet();

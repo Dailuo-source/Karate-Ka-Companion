@@ -110,6 +110,17 @@ const settle = page => page.waitForTimeout(700);
 
   // kata page + kiai counter
   await page.click('.tab[data-v=kata]');
+  // default belt order: most advanced first within Solo; the sort button flips it
+  let names = await page.locator('.krow .kname').allTextContents();
+  assert.equal(names[0], 'Bassai Dai', 'Solo starts with the most advanced: ' + names.join(','));
+  assert.ok(names.indexOf('Goshin no Kata Shodan') > names.indexOf('Tai Kyoku Shodan'), 'Solo before Multi-person');
+  assert.ok(names.indexOf('Sannin Tatakai') < names.indexOf('Goshin no Kata Shodan'), 'Black before White in Multi-person');
+  await page.click('[data-act=ksort]');
+  names = await page.locator('.krow .kname').allTextContents();
+  assert.ok(['Tai Kyoku Shodan', 'San Chin'].includes(names[0]), 'flipped: beginner first: ' + names[0]);
+  assert.ok(names.indexOf('Goshin no Kata Shodan') > names.indexOf('Bassai Dai'), 'still Solo before Multi-person');
+  await shot(page, '05a-kata-sort-flipped');
+  await page.click('[data-act=ksort]');
   await settle(page);
   await shot(page, '05-kata-list');
   await page.click('.krow:has-text("Bassai Dai")');
@@ -268,7 +279,27 @@ const settle = page => page.waitForTimeout(700);
   await w.page.keyboard.press('/');
   assert.equal(await w.page.evaluate(() => document.activeElement.id), 'q');
   await w.page.click('.tab[data-v=kata]');
+  // a kata opens in the side panel; the list stays and another kata replaces it
+  await w.page.click('.krow:has-text("Bassai Dai")');
+  assert.ok((await w.page.textContent('#sheet .khero h1')).includes('Bassai Dai'));
+  assert.ok(await w.page.locator('.krow').count() > 3, 'kata list stays visible');
   await shot(w.page, '16-desktop-kata');
+  await w.page.click('.krow:has-text("Heian Yondan")');
+  assert.ok((await w.page.textContent('#sheet .khero h1')).includes('Heian Yondan'));
+  assert.equal(await w.page.locator('.krow.active').count(), 1);
+  await w.page.click('#sheet [data-act=kiai][data-v="1"]');
+  await settle(w.page);
+  assert.ok((await w.page.textContent('#sheet .kiai .n')).includes('1'));
+  // a note opened from the kata panel comes back to the kata when closed
+  await w.page.click('#sheet [data-act=open-note]');
+  await w.page.click('#sheet .shead [data-act=close]');
+  assert.ok((await w.page.textContent('#sheet .khero h1')).includes('Heian Yondan'));
+  await w.page.click('#sheet .kpanehead [data-act=close]');
+  assert.equal(await w.page.locator('#sheet .pane-empty').count(), 1);
+  await w.page.click('.krow:has-text("Heian Yondan")');
+  assert.equal(await w.page.locator('.krow.active').count(), 1, 'reopened kata is highlighted');
+  assert.equal(await w.page.$eval('.krow.active', el => getComputedStyle(el).outlineStyle), 'solid');
+  await shot(w.page, '16b-desktop-kata-panel');
   await w.page.click('.tab[data-v=goals]');
   await shot(w.page, '17-desktop-goals');
   assert.deepEqual(w.errs, [], w.errs.join('\n'));

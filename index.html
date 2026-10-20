@@ -229,7 +229,10 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.45;font-weight:600}
   .heroes{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
   .note,.hero,.goal .nbody,.opt{cursor:pointer}
   .note:hover,.hero:hover{filter:brightness(1.08)}
-  .note.active,.hero.active{box-shadow:0 0 0 2px var(--accent)}
+  .note.active,.hero.active,.krow.active{outline:2px solid var(--accent);outline-offset:-2px}
+  .krow{cursor:pointer}
+  .krow:hover{filter:brightness(1.08)}
+  .kpanehead{gap:10px}
   .goal .nbody.active{outline:2px solid var(--accent);outline-offset:4px;border-radius:12px}
   .toast{left:calc(var(--side) + (100vw - var(--side) - var(--pane)) / 2);bottom:32px;width:min(520px,calc(100vw - var(--side) - var(--pane) - 48px))}
   #sheetWrap,#sheetWrap[hidden]{display:flex;position:fixed;top:0;right:0;bottom:0;left:auto;width:var(--pane);z-index:4;background:var(--bg);border-left:1px solid var(--line);align-items:stretch;justify-content:stretch}
@@ -351,6 +354,7 @@ let SESSION=LS.get("session",""), ROLE=LS.get("role",""), EMAIL=LS.get("email","
 let S={notes:[],kata:[],access:[],kataList:[]};
 let auth="signin", ready=false, noAccess={email:"",requested:false}, setupMsg="";
 let queue=[],inflight=false,flushT=0,retryT=0,lastSync=0,syncState="",sheetUrl=LS.get("sheet","");
+let kataSort=LS.get("ksort","adv")==="beg"?"beg":"adv"; // adv = most advanced belt first (Gary, Oct 20)
 let tab=LS.get("tab","notes"), typeF="All", q="", dateF="all", sortNew=LS.get("sort","new")!=="old";
 let kataOpen=null, kq="", sheet=null, lastFocus=null, kiaiOpen=false;
 
@@ -513,11 +517,13 @@ function render(){
      <button class="btn wide" data-act="other-account">Use a different account</button>`);return;}
   if(!ready){app.innerHTML=authScreen("sleepy","Opening your notes…","","");return;}
   let html="";
-  if(tab==="kata"&&kataOpen)html=kataPage(kataOpen);
+  if(tab==="kata"&&kataOpen&&!wide())html=kataPage(kataOpen);
   else html=header()+(tab==="kata"?viewKataList():tab==="goals"?viewGoals():viewNotes());
   app.innerHTML=html+nav()+(ROLE==="owner"&&!(tab==="kata"&&!kataOpen)?`<button class="fab" data-act="new" aria-label="New note">${I.plus}</button>`:"");
   setSync(syncState||"ok");
-  replayTap();markActive();
+  replayTap();
+  if(wide()&&tab==="kata"&&kataOpen&&!sheet)openSheet({type:"kata",name:kataOpen});
+  markActive();
   if(wide()&&!sheet){const b=$("#sheet");if(b&&!b.querySelector(".pane-empty"))b.innerHTML=paneEmpty();}
 }
 function authScreen(mood,title,body,extra){
@@ -544,7 +550,10 @@ const GBADGE=`<span class="gbadge">★ Goal</span>`;
 const WIDE=matchMedia("(min-width:1000px)");const wide=()=>WIDE.matches;
 const paneEmpty=()=>`<div class="pane-empty">${mascot("sleepy")}<p>Pick a note to read it here.</p></div>`;
 function markActive(){const cur=sheet&&(sheet.type==="note"||sheet.type==="form")?sheet.id:null;
-  document.querySelectorAll("#app [data-act=open-note]").forEach(el=>el.classList.toggle("active",!!cur&&el.dataset.id===cur));}
+  document.querySelectorAll("#app [data-act=open-note]").forEach(el=>el.classList.toggle("active",!!cur&&el.dataset.id===cur));
+  const kc=sheet&&sheet.type==="kata"?sheet.name:sheet&&sheet.back?sheet.back.name:null;
+  document.querySelectorAll("#app [data-act=open-kata]").forEach(el=>el.classList.toggle("active",!!kc&&eqi(el.dataset.v,kc)));}
+const curKata=()=>sheet&&sheet.type==="kata"?sheet.name:sheet&&sheet.back&&sheet.back.type==="kata"&&(sheet.type==="rem"||sheet.type==="kiai")?sheet.back.name:kataOpen;
 function noteCard(n){
   const t=typeOf(n.type),title=noteTitle(n);
   const meta=[`<b>${esc(t.s)}</b>`,n.kata&&title!==n.kata?esc(n.kata):"",n.from!=="Me"?esc(n.from):""].filter(Boolean).join(" · ");
@@ -586,6 +595,7 @@ function viewGoals(){
 }
 function viewKataList(){
   return `<div class="search">${I.search}<label for="kq" class="sr">Search kata</label><input id="kq" type="search" placeholder="Search kata…" value="${esc(kq)}" autocomplete="off"></div>
+    <div class="row pad" style="margin-top:12px"><span class="sub grow">Solo · Multi-person · Weapon</span><button class="sbtn" data-act="ksort" aria-label="Belt order: ${kataSort==="adv"?"most advanced first":"beginner first"}. Tap to flip.">${I.sort}${kataSort==="adv"?"Most advanced first":"Beginner first"}</button></div>
     <div id="klist">${kataRows()}</div>`;
 }
 const KCATS=["Solo","Multi-person","Weapon"];
@@ -604,7 +614,8 @@ function kataRows(){
   // Group: Solo, then Multi-person, then Weapon (from the dojo Kata Tracker), each by belt rank.
   const catOf=k=>{const i=KCATS.findIndex(c=>eqi(c,k.cat));return i<0?(k.order<999?KCATS.length:KCATS.length+1):i;};
   const beltOf=k=>{const i=BELTS.findIndex(b=>eqi(b,k.belt));return i<0?BELTS.length:i;};
-  all.sort((a,b)=>catOf(a)-catOf(b)||beltOf(a)-beltOf(b)||a.order-b.order||a.name.localeCompare(b.name));
+  const NB=BELTS.length,bo=(a,b)=>{const x=beltOf(a),y=beltOf(b);if(x===y)return 0;if(x===NB)return 1;if(y===NB)return -1;return kataSort==="adv"?y-x:x-y;};
+  all.sort((a,b)=>catOf(a)-catOf(b)||bo(a,b)||a.order-b.order||a.name.localeCompare(b.name));
   let out="",lastC=-1,lastB=-1;
   all.forEach(k=>{const c=catOf(k),b=beltOf(k);
     if(c!==lastC){out+=`<h2 class="kcat">${esc(KCATS[c]||(c===KCATS.length?"Dojo kata":"My other kata"))}</h2>`;lastC=c;lastB=-1;}
@@ -627,13 +638,14 @@ function kiaiSheet(name){
     ${Array.from({length:n},(_,i)=>`<label class="field"><span>Kiai ${i+1}</span><input class="inp" name="k${i}" value="${esc((notes[i]||"").trim())}" maxlength="80" placeholder="e.g. Gyaku Zuki" ${i===0?"autofocus":""}></label>`).join("")}
     <div class="btns"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></form>`;
 }
-function kataPage(name){
+function kataPage(name,inPane){
   const info=kataInfo(name)||{},en=kataEn(name),can=ROLE==="owner";
+  const addBtn=can?`<button class="btn primary" data-act="new-kata-note" style="height:44px">${I.plus.replace("<svg",'<svg width="18" height="18"')}Add note</button>`:"";
   const notes=S.notes.filter(n=>eqi(n.kata,name)).sort((a,b)=>byDate(b,a));
   const rems=String(info.reminders||"").split("\n").map(s=>s.trim()).filter(Boolean);
   const k=info.kiais;
-  return `<div class="backrow"><button class="ibtn" data-act="kata-back" aria-label="Back to kata list">${I.back}</button><span class="grow"></span>
-      ${can?`<button class="btn primary" data-act="new-kata-note" style="height:44px">${I.plus.replace("<svg",'<svg width="18" height="18"')}Add note</button>`:""}</div>
+  return `${inPane?`<div class="shead kpanehead"><span class="grow"></span>${addBtn}<button type="button" class="ibtn close" data-act="close" aria-label="Close ${esc(name)}">${I.close}</button></div>`
+      :`<div class="backrow"><button class="ibtn" data-act="kata-back" aria-label="Back to kata list">${I.back}</button><span class="grow"></span>${addBtn}</div>`}
     <section class="khero"><div class="row" style="gap:14px"><span style="width:64px;height:64px;color:var(--kata-i)">${icon("kata")}</span>
       <div><h1>${esc(name)}</h1>${en?`<div class="en">${esc(en)}</div>`:""}</div></div>
       <div class="seg" role="group" aria-label="How it feels">${STATUSES.map(s=>`<button data-act="kstatus" data-v="${s}" aria-pressed="${info.status===s}" ${can?"":"disabled"}>${s}</button>`).join("")}</div>
@@ -653,11 +665,15 @@ function kataPage(name){
 
 /* ---------- panels ---------- */
 function openSheet(s){if(wide()&&sheet&&sheet.dirty&&!(s.type==="form"&&s.id&&s.id===sheet.id)){toast("Save or cancel your changes first.");return;}
+  if(wide()&&sheet&&s.type!=="kata"&&!s.back){if(sheet.type==="kata")s.back={type:"kata",name:sheet.name};else if(sheet.back&&s.type==="form"&&s.id&&s.id===sheet.id)s.back=sheet.back;}
   hideToast();if(!sheet)lastFocus=document.activeElement;sheet=s;renderSheet();$("#sheetWrap").hidden=false;$("#sheet").setAttribute("aria-modal",wide()?"false":"true");document.body.style.overflow=wide()?"":"hidden";markActive();if(wide())$("#sheet").scrollTop=0;
   setTimeout(()=>{const f=$("#sheet [autofocus]")||$("#sheet .close");if(f)f.focus();},40);}
-function closeSheet(){sheet=null;const w=$("#sheetWrap");if(w)w.hidden=true;document.body.style.overflow="";if(wide())$("#sheet").innerHTML=paneEmpty();markActive();if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
+function closeSheet(){const prev=sheet;
+  if(wide()&&prev&&prev.back){sheet=null;openSheet(prev.back);return;}
+  if(prev&&prev.type==="kata")kataOpen=null;
+  sheet=null;const w=$("#sheetWrap");if(w)w.hidden=true;document.body.style.overflow="";if(wide())$("#sheet").innerHTML=paneEmpty();markActive();if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
 function renderSheet(){if(!sheet)return;const b=$("#sheet");
-  b.innerHTML=sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):sheet.type==="kiai"?kiaiSheet(sheet.name):accountSheet();
+  b.innerHTML=sheet.type==="kata"?kataPage(sheet.name,true):sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):sheet.type==="kiai"?kiaiSheet(sheet.name):accountSheet();
   b.setAttribute("aria-label",sheet.type==="form"?"Note":sheet.type);replayTap();}
 const shead=t=>`<div class="shead"><h2>${esc(t)}</h2><button type="button" class="ibtn close" data-act="close" aria-label="Close">${I.close}</button></div>`;
 function noteSheet(id){
@@ -750,20 +766,24 @@ document.addEventListener("click",e=>{
     case"sync":flush();break;
     case"close":closeSheet();break;
     case"new":openSheet({type:"form",preType:"",preGoal:tab==="goals",preKata:tab==="kata"&&kataOpen?kataOpen:""});break;
-    case"new-kata-note":openSheet({type:"form",preType:"Kata",preKata:kataOpen});break;
+    case"new-kata-note":openSheet({type:"form",preType:"Kata",preKata:curKata()});break;
     case"open-note":openSheet({type:"note",id});break;
     case"edit-note":openSheet({type:"form",id});break;
     case"pin":{const n=S.notes.find(x=>x.id===id);if(n){store.update("notes",id,{pinned:!n.pinned});toast(n.pinned?"Pinned to Working on":"Unpinned");}break;}
     case"del-note":{if(!armed(b))break;const n=S.notes.find(x=>x.id===id);if(!n)break;const copy=Object.assign({},n);delete copy.id;
       store.del("notes",id);closeSheet();toast("Note deleted",{label:"Undo",fn:()=>enqueue({op:"add",coll:"notes",id,data:copy})});break;}
     case"goal-done":{const n=S.notes.find(x=>x.id===id);if(n)store.update("notes",id,{done:!n.done});if(n&&n.done)toast("Goal done. Nice work!");break;}
-    case"open-kata":closeSheet();kiaiOpen=false;tab="kata";LS.set("tab","kata");kataOpen=v;render();window.scrollTo(0,0);break;
+    case"open-kata":{if(wide()&&sheet&&sheet.dirty){toast("Save or cancel your changes first.");break;}
+      if(!eqi(v,kataOpen))kiaiOpen=false;const wasKata=tab==="kata";tab="kata";LS.set("tab","kata");kataOpen=v;
+      if(wide()){if(sheet)sheet.back=null;openSheet({type:"kata",name:v});render();if(!wasKata)window.scrollTo(0,0);}
+      else{closeSheet();kataOpen=v;render();window.scrollTo(0,0);}break;}
     case"kata-back":kataOpen=null;kiaiOpen=false;render();break;
-    case"kstatus":{const info=kataInfo(kataOpen);upsertKata(kataOpen,{status:info&&info.status===v?"":v});break;}
-    case"kiai":{const info=kataInfo(kataOpen);const cur=info&&info.kiais!=null?info.kiais:0;upsertKata(kataOpen,{kiais:Math.max(0,cur+Number(v))});break;}
-    case"edit-rem":openSheet({type:"rem",name:kataOpen});break;
-    case"kiai-toggle":kiaiOpen=!kiaiOpen;render();break;
-    case"edit-kiai":openSheet({type:"kiai",name:kataOpen});break;
+    case"kstatus":{const nm=curKata();const info=kataInfo(nm);upsertKata(nm,{status:info&&info.status===v?"":v});break;}
+    case"kiai":{const nm=curKata();const info=kataInfo(nm);const cur=info&&info.kiais!=null?info.kiais:0;upsertKata(nm,{kiais:Math.max(0,cur+Number(v))});break;}
+    case"edit-rem":openSheet({type:"rem",name:curKata()});break;
+    case"kiai-toggle":kiaiOpen=!kiaiOpen;render();if(sheet&&sheet.type==="kata")renderSheet();break;
+    case"ksort":kataSort=kataSort==="adv"?"beg":"adv";LS.set("ksort",kataSort);render();break;
+    case"edit-kiai":openSheet({type:"kiai",name:curKata()});break;
     case"theme":THEME=v;LS.set("theme",v);applyTheme();render();renderSheet();break;
     case"access":store.update("access",id,{status:v});break;
     case"signout":signOut();break;
@@ -800,7 +820,7 @@ document.addEventListener("keydown",e=>{
    (panel → kata page → Notes tab) instead of closing the app. On the Notes tab, Back asks once more. */
 let exitArmed=false,exitT;
 const guardBack=()=>{try{history.pushState({kc:1},"");}catch(e){}};
-WIDE.addEventListener("change",()=>{document.body.style.overflow=sheet&&!wide()?"hidden":"";if(sheet)renderSheet();else{$("#sheet").innerHTML=wide()?paneEmpty():"";}render();});
+WIDE.addEventListener("change",()=>{if(!wide()&&sheet&&sheet.type==="kata"){kataOpen=sheet.name;sheet=null;$("#sheetWrap").hidden=true;}document.body.style.overflow=sheet&&!wide()?"hidden":"";if(sheet)renderSheet();else{$("#sheet").innerHTML=wide()?paneEmpty():"";}render();});
 ["input","change"].forEach(ev=>document.addEventListener(ev,e=>{if(sheet&&sheet.type==="form"&&e.target.closest&&e.target.closest("#noteForm"))sheet.dirty=true;}));
 window.addEventListener("popstate",()=>{
   if(exitArmed)return; // second Back on the home screen: let the app close

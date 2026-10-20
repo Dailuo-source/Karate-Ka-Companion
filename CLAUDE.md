@@ -40,7 +40,8 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
   onigiri-in-a-headband `mascot()` (happy / sleepy / stern). App icon is the same onigiri on periwinkle.
 - Goals (Gary, Oct 20): not a note type any more. `goal` flag on any note ("Mark as a goal" switch in the form, ★ Goal badge on cards); Goals tab lists flagged notes. Old "Goals" rows read as General + goal; `setup` → `migrateGoals_` rewrites them in the sheet.
 - Note form ends in a sticky bar: Cancel + green **Save changes** ("Save note" when new). Ctrl+S saves, Esc cancels.
-- Wide screens (≥1000px, Gary Oct 20): sidebar with brand, sections, **New note**, **Note types** (with counts; replace the chips) and **Settings** at the bottom. The list fills the width between the sidebar and a docked right panel (`--pane`). The panel is not modal: no scrim, the list stays clickable, clicking another note replaces it, × leaves a "Pick a note" placeholder (`paneEmpty`, `markActive`, `wide()`). An unsaved edit blocks switching ("Save or cancel your changes first"). Keys: N new note, / search.
+- Wide screens (≥1000px, Gary Oct 20): sidebar with brand, sections, **New note**, **Note types** (with counts; replace the chips) and **Settings** at the bottom. The list fills the width between the sidebar and a docked right panel (`--pane`). The panel is not modal: no scrim, the list stays clickable, clicking another note replaces it, × leaves a "Pick a note" placeholder (`paneEmpty`, `markActive`, `wide()`). An unsaved edit blocks switching ("Save or cancel your changes first"). Kata rows open the kata page in the same panel (`kataPage(name,true)`, sheet type `kata`); notes, reminders and kiai panels opened from it carry `back` and return to the kata when closed. Kata actions read `curKata()`. Keys: N new note, / search.
+- Kata tab sort (Gary, Oct 20): Solo, Multi-person, Weapon, then belt **most advanced first** by default; the sort button flips to beginner first (`kataSort`, saved as `kc.ksort`). Unknown belts stay last.
 - Notes tab: search, type chips, "Working on" (pinned), date filter (7 days / month / 3 months / any month),
   Newest/Oldest sort, grouped under date headings.
 - Press feedback: `.tapping` dip + `.tapped` ring, replayed on the redrawn button (`replayTap`).
@@ -99,6 +100,7 @@ Inside the `index.html` script, search for:
 - Kata tab: kata not on the dojo list (e.g. Boken no Kata) show under "My other kata" at the bottom.
 
 ## Changelog (latest first, keep about 10 lines)
+- 2026-10-20: Kata open in the side panel on desktop; belt sort (most advanced first, flippable). sw v8.
 - 2026-10-20: Desktop: full width, docked non-modal note panel, note types + Settings in the sidebar. sw v7.
 - 2026-10-20: Goal is a flag on any note (Goals type removed, migrated by setup), sticky Save changes bar, desktop layout. Web app v5.
 - 2026-10-19: Phone Back button steps back inside the app instead of closing it

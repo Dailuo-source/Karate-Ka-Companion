@@ -15,7 +15,7 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 | --- | --- |
 | Live app | https://karate-ka-companion.pages.dev/ (Cloudflare Pages from `main`) |
 | Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, Assignments, My kata, Access |
-| Backend | Apps Script project "Karate-Ka Companion" bound to the sheet; source is `Code.gs` here. Web app version 5 (Execute as Gary, access Anyone), URL in `API_URL` in index.html |
+| Backend | Apps Script project "Karate-Ka Companion" bound to the sheet; source is `Code.gs` here. Web app version 6 (Execute as Gary, access Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the dojo Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
 | Setup guide | `SETUP.md` |
 
@@ -112,7 +112,7 @@ Inside the `index.html` script, search for:
 - Kata tab: kata not on the dojo list (e.g. Boken no Kata) show under "My other kata" at the bottom.
 
 ## Changelog (latest first, keep about 10 lines)
-- 2026-10-21: Assignments tab + sheet; Follow up marker; distinct Goal / Working on / Follow up markers. sw v9. Needs web app redeploy.
+- 2026-10-21: Assignments tab + sheet; Follow up marker; distinct Goal / Working on / Follow up markers. sw v9. Web app v6, setup run.
 - 2026-10-20: Kata open in the side panel on desktop; belt sort (most advanced first, flippable). sw v8.
 - 2026-10-20: Desktop: full width, docked non-modal note panel, note types + Settings in the sidebar. sw v7.
 - 2026-10-20: Goal is a flag on any note (Goals type removed, migrated by setup), sticky Save changes bar, desktop layout. Web app v5.

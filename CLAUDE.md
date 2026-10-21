@@ -4,8 +4,9 @@
 > `index.html` is about 57 KB (~15k tokens): don't read it whole; search for a function name (e.g. `grep -n "function render" index.html`) and read just that function.
 > At the end of a work session, update **Status** and add one line to **Changelog** (keep about 10).
 
-Gary's private karate notebook. Dated notes typed Kata / Kihon / Kumite / Sensei says / General; any note can be marked as a goal (Notes column "Goal"),
-a page per kata (how it feels, fixed kiai count with a collapsible note per kiai, key reminders, every note on that kata) and a Goals tab.
+Gary's private karate notebook. Dated notes typed Kata / Kihon / Kumite / Sensei says / General; any note can carry markers
+(Goal, Working on, Follow up), a page per kata (how it feels, fixed kiai count with a collapsible note per kiai, key reminders,
+every note on that kata), a Goals tab and an Assignments tab.
 Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 
 ## Where things live
@@ -13,7 +14,7 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 | Piece | Location |
 | --- | --- |
 | Live app | https://karate-ka-companion.pages.dev/ (Cloudflare Pages from `main`) |
-| Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, My kata, Access |
+| Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, Assignments, My kata, Access |
 | Backend | Apps Script project "Karate-Ka Companion" bound to the sheet; source is `Code.gs` here. Web app version 5 (Execute as Gary, access Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the dojo Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
 | Setup guide | `SETUP.md` |
@@ -39,6 +40,14 @@ Used on his Samsung phone (Chrome PWA). No photos (Gary's choice).
 - Kawaii icons: `ICONS` (scroll, belt ball, glove, speech bubble, star, notebook, all with faces) and the
   onigiri-in-a-headband `mascot()` (happy / sleepy / stern). App icon is the same onigiri on periwinkle.
 - Goals (Gary, Oct 20): not a note type any more. `goal` flag on any note ("Mark as a goal" switch in the form, ★ Goal badge on cards); Goals tab lists flagged notes. Old "Goals" rows read as General + goal; `setup` → `migrateGoals_` rewrites them in the sheet.
+- Markers (Gary, Oct 21): each has its own symbol, colour and shape. Goal = gold star, solid gold pill. Working on = coral flame,
+  solid coral pill (`pinned`, max 3 via `WORK_MAX`, coral cards at the top of Notes). Follow up = sky bell, dashed outline
+  (`followUp`, `ask` Sensei/Senpai/Myself, `answered`; dashed strip under Working on with a tick button). Mockup: Karate Notes
+  mock-up canvas, boards 11–15.
+- Assignments (Gary, Oct 21): own tab (4th) and sheet tab. Only Sensei gives them, so there is no "given by" field. Title, kata,
+  given, due, steps (one per line, `[x] ` = done; `parseSteps`/`serSteps`), notes, `noteId` (made from a note via "Turn into an
+  assignment"). Grouped Overdue / This week / Later / No due date, To do / Done toggle (`asView`). Lavender clipboard, square due tag;
+  overdue count shows as a red dot on the tab. Panels: `assignSheet`, `assignForm`, `saveAssign`.
 - Note form ends in a sticky bar: Cancel + green **Save changes** ("Save note" when new). Ctrl+S saves, Esc cancels.
 - Wide screens (≥1000px, Gary Oct 20): sidebar with brand, sections, **New note**, **Note types** (with counts; replace the chips) and **Settings** at the bottom. The list fills the width between the sidebar and a docked right panel (`--pane`). The panel is not modal: no scrim, the list stays clickable, clicking another note replaces it, × leaves a "Pick a note" placeholder (`paneEmpty`, `markActive`, `wide()`). An unsaved edit blocks switching ("Save or cancel your changes first"). Kata rows open the kata page in the same panel (`kataPage(name,true)`, sheet type `kata`); notes, reminders and kiai panels opened from it carry `back` and return to the kata when closed. Kata actions read `curKata()`. Keys: N new note, / search.
 - Kata tab sort (Gary, Oct 20): Solo, Multi-person, Weapon, then belt **most advanced first** by default; the sort button flips to beginner first (`kataSort`, saved as `kc.ksort`). Unknown belts stay last.
@@ -73,6 +82,8 @@ Inside the `index.html` script, search for:
 - Notes: `viewNotes`, `notesList`, `noteCard`, `filtered`, `inDate`, `noteSheet`, `saveNote`, `dateSheet`
 - Kata: `upsertKata`, `kataNames`, `viewKataList`, `kataRows`, `kataPage`
 - Goals: `viewGoals`
+- Markers: `marks`, `MK`, `workCount`, `ASKS`, `askLbl`
+- Assignments: `viewAssignments`, `asCard`, `assignSheet`, `assignForm`, `saveAssign`, `parseSteps`, `dueLabel`
 - Panels: `openSheet`, `renderSheet`, `formSheet`, `remSheet`, `accountSheet`, `toast`
 - Tap feedback: `tapKey`, `replayTap`
 
@@ -93,6 +104,7 @@ Inside the `index.html` script, search for:
 - `My kata` column "Kiai notes (one per line, in order)": line N = kiai N. Notes past the current count are kept, just hidden.
 - On the kata page "Kiai details" starts collapsed every time (`kiaiOpen`, not saved) and opens to a numbered list; owner gets "Edit kiai notes".
 - Adding a sheet column: run `setup` once in Apps Script (it only adds missing headers), then redeploy a New version.
+  Since Oct 21 `applyOp_` also adds a missing column itself the first time the app writes to it.
 
 ## Status
 - Working: live at karate-ka-companion.pages.dev, Gary signed in and using it.
@@ -100,6 +112,7 @@ Inside the `index.html` script, search for:
 - Kata tab: kata not on the dojo list (e.g. Boken no Kata) show under "My other kata" at the bottom.
 
 ## Changelog (latest first, keep about 10 lines)
+- 2026-10-21: Assignments tab + sheet; Follow up marker; distinct Goal / Working on / Follow up markers. sw v9. Needs web app redeploy.
 - 2026-10-20: Kata open in the side panel on desktop; belt sort (most advanced first, flippable). sw v8.
 - 2026-10-20: Desktop: full width, docked non-modal note panel, note types + Settings in the sidebar. sw v7.
 - 2026-10-20: Goal is a flag on any note (Goals type removed, migrated by setup), sticky Save changes bar, desktop layout. Web app v5.

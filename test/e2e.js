@@ -179,7 +179,7 @@ const settle = page => page.waitForTimeout(700);
   await page.click('.savebar .save');
   await page.waitForSelector('#sheetWrap', { state: 'hidden' });
   await settle(page);
-  assert.equal(await page.locator('.note:has-text("Keep guard up") .gbadge').count(), 1);
+  assert.equal(await page.locator('.note:has-text("Keep guard up") .mk-goal').count(), 1);
   await page.click('.tab[data-v=goals]');
   await settle(page);
   assert.equal(await page.locator('.goal').count(), 2);
@@ -205,6 +205,62 @@ const settle = page => page.waitForTimeout(700);
   await page.click('[data-act=theme][data-v=dark]');
   await page.click('[data-act=close]');
 
+  // follow up: its own dashed strip under Working on, ticked off when answered
+  await page.click('.note:has-text("Hips first")');
+  await page.click('[data-act=edit-note]');
+  await page.check('input[name=followUp]');
+  await page.click('.who .pillr:has-text("Ask Senpai")');
+  await shot(page, '09a-note-markers');
+  await page.click('.savebar .save');
+  await page.waitForSelector('#sheetWrap', { state: 'hidden' });
+  await settle(page);
+  assert.equal(await page.locator('.fus .fu').count(), 1);
+  assert.ok((await page.textContent('.fus .fu .who')).includes('Ask Senpai'));
+  assert.equal(await page.locator('.note:has-text("Hips first") .mk-fu').count(), 1);
+  await shot(page, '09b-notes-working-follow');
+  await page.click('.fus .fu [data-act=answer]');
+  await settle(page);
+  assert.equal(await page.locator('.fus .fu').count(), 0);
+  await page.click('#toast [data-act=toast]').catch(() => {});
+
+  // assignments: turn a note into one, tick steps, mark done
+  await page.click('.note:has-text("Hips first")');
+  await page.click('[data-act=to-assign]');
+  await page.waitForSelector('#assignForm');
+  assert.equal(await page.inputValue('input[name=title]'), 'Hips first, then hands');
+  await page.fill('input[name=due]', d(-3));
+  await page.fill('textarea[name=steps]', 'Moves 1 to 4\nMoves 5 to 8');
+  await page.click('.savebar .save');
+  await page.waitForSelector('#sheetWrap', { state: 'hidden' });
+  await page.click('#toast [data-act=toast]');
+  await settle(page);
+  assert.equal(await page.locator('.tab[data-v=assignments][aria-selected=true]').count(), 1);
+  assert.equal(await page.locator('.as').count(), 1);
+  // one overdue, added from the + button
+  await page.click('.fab');
+  await page.fill('input[name=title]', 'Film Heian Godan and send it in');
+  await page.fill('input[name=due]', d(2));
+  await page.click('.savebar .save');
+  await page.waitForSelector('#sheetWrap', { state: 'hidden' });
+  await settle(page);
+  assert.equal(await page.locator('.as.late').count(), 1);
+  assert.ok((await page.textContent('.tab[data-v=assignments] .dotn')).includes('1'));
+  await shot(page, '09c-assignments');
+  await page.click('.as:has-text("Hips first")');
+  await page.click('[data-act=step][data-v="0"]');
+  await settle(page);
+  assert.equal(await page.locator('.stp[aria-pressed=true]').count(), 1);
+  await shot(page, '09d-assignment');
+  await page.click('[data-act=as-done]');
+  await page.click('[data-act=close]');
+  await settle(page);
+  assert.equal(await page.locator('.as').count(), 1);
+  await page.click('[data-act=asview][data-v=done]');
+  assert.equal(await page.locator('.as.done').count(), 1);
+  await page.click('[data-act=asview][data-v=todo]');
+  await page.click('.tab[data-v=notes]');
+  await settle(page);
+
   // the sheet really holds the data
   const st = B.api({ session: await page.evaluate(() => localStorage.getItem('kc.session')) });
   assert.equal(st.state.notes.length, 6);
@@ -215,6 +271,12 @@ const settle = page => page.waitForTimeout(700);
   assert.equal(st.state.notes.find(n => n.title === 'Bassai Dai ready for grading').goal, true);
   assert.equal(st.state.notes.find(n => n.title === 'Keep guard up after kicking').type, 'Kumite');
   assert.equal(st.state.notes.find(n => n.title === 'Keep guard up after kicking').goal, true);
+  const hips = st.state.notes.find(n => n.title === 'Hips first, then hands');
+  assert.equal(hips.followUp, true); assert.equal(hips.answered, true); assert.equal(hips.ask, 'Senpai');
+  assert.equal(st.state.assignments.length, 2);
+  const a1 = st.state.assignments.find(a => a.noteId === hips.id);
+  assert.equal(a1.steps, '[x] Moves 1 to 4\n[ ] Moves 5 to 8');
+  assert.equal(a1.done, true);
   assert.deepEqual(errs, [], errs.join('\n'));
 
   /* ---------- someone else ---------- */
@@ -302,6 +364,10 @@ const settle = page => page.waitForTimeout(700);
   await shot(w.page, '16b-desktop-kata-panel');
   await w.page.click('.tab[data-v=goals]');
   await shot(w.page, '17-desktop-goals');
+  await w.page.click('.tab[data-v=assignments]');
+  await w.page.click('.as:has-text("Film Heian Godan")');
+  assert.equal(await w.page.locator('.as.active').count(), 1);
+  await shot(w.page, '18-desktop-assignments');
   assert.deepEqual(w.errs, [], w.errs.join('\n'));
 
   await browser.close();

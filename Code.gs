@@ -2,7 +2,9 @@
  * Karate-Ka Companion — Google Sheets backend
  *
  * The Sheet is the database:
- *   Notes    — one row per note (dated), typed Kata / Kihon / Kumite / Sensei says / General; any note can be ticked as a Goal
+ *   Notes    — one row per note (dated), typed Kata / Kihon / Kumite / Sensei says / General; any note can be ticked
+ *              as a Goal, Pinned (Working on) or Follow up (a question to ask Sensei, Senpai or yourself)
+ *   Assignments — tasks Sensei gave you: due date, steps (one per line, "[x] " = done), linked note
  *   My kata  — your own view of each kata: how it feels, how many kiais it has, key reminders
  *   Access   — other Google accounts that asked to see your notes. Set Status to Approved to let one in
  *              (view only). Leave it Requested or set Denied to keep them out.
@@ -23,6 +25,7 @@ const KATA_TAB = 'Kata';
 const TYPES = ['Kata', 'Kihon', 'Kumite', 'Sensei says', 'General']; // Goals is a flag (Goal column), not a type
 const SOURCES = ['Me', 'Sensei', 'Seminar'];
 const STATUSES = ['Learning', 'Polishing', 'Solid'];
+const ASKS = ['Sensei', 'Senpai', 'Myself']; // Follow up: who to ask
 const ACCESS = ['Requested', 'Approved', 'Denied'];
 const SESSION_DAYS = 60;
 
@@ -42,6 +45,26 @@ const SCHEMA = {
       ['pinned', 'Pinned', 'bool', 65],
       ['goal', 'Goal', 'bool', 65],
       ['done', 'Done (goals)', 'bool', 90],
+      ['followUp', 'Follow up', 'bool', 85],
+      ['ask', 'Ask who', 'ask', 90],
+      ['answered', 'Answered', 'bool', 85],
+      ['added', 'Added', 'datetime', 150],
+      ['updated', 'Updated', 'datetime', 150],
+    ],
+  },
+  assignments: {
+    sheet: 'Assignments', key: 'title',
+    cols: [
+      ['id', 'ID', 'id', 80],
+      ['title', 'Assignment', 'text', 240],
+      ['kata', 'Kata', 'text', 140],
+      ['given', 'Given', 'date', 110],
+      ['due', 'Due', 'date', 110],
+      ['steps', 'Steps (one per line, [x] = done)', 'text', 260],
+      ['note', 'Notes', 'text', 260],
+      ['noteId', 'From note (ID)', 'text', 100],
+      ['done', 'Done', 'bool', 60],
+      ['doneOn', 'Done on', 'datetime', 150],
       ['added', 'Added', 'datetime', 150],
       ['updated', 'Updated', 'datetime', 150],
     ],
@@ -91,7 +114,7 @@ function doPost(e) {
 
 /**
  * Request:  { idToken } to sign in, or { session, ops?, requestAccess? }
- *           ops: [{op: 'add'|'update'|'del', coll: 'notes'|'kata'|'access', id, data}]
+ *           ops: [{op: 'add'|'update'|'del', coll: 'notes'|'assignments'|'kata'|'access', id, data}]
  * Response: { ok: true, role, email, state, session?, sheetUrl? } or { ok: false, error, message, email? }
  */
 function api(body) {
@@ -416,7 +439,12 @@ function applyOp_(op) {
   if (!sch) throw new Error('Unknown list "' + op.coll + '".');
   const ss = ss_();
   const sh = ss.getSheetByName(sch.sheet) || buildTab_(ss, sch);
-  const t = table_(sh, sch);
+  let t = table_(sh, sch);
+  // A new column (e.g. Follow up) that isn't in the sheet yet: add it now instead of dropping the value
+  if (op.data && sch.cols.some(function (c) { return c[0] in op.data && t.cols[c[0]] == null; })) {
+    buildTab_(ss, sch);
+    t = table_(sh, sch);
+  }
   const row = op.id ? t.rowOf[op.id] : null;
 
   if (op.op === 'del') {
@@ -569,10 +597,11 @@ function buildTab_(ss, sch) {
     if (type === 'from') rng.setDataValidation(pick(SOURCES));
     if (type === 'status') rng.setDataValidation(pick(STATUSES));
     if (type === 'access') rng.setDataValidation(pick(ACCESS));
+    if (type === 'ask') rng.setDataValidation(pick(ASKS));
     if (type === 'bool') rng.insertCheckboxes();
     if (type === 'date') rng.setNumberFormat('ddd mmm d, yyyy');
     if (type === 'datetime') rng.setNumberFormat('mmm d, yyyy h:mm am/pm');
-    if (field === 'note' || field === 'reminders' || field === 'kiaiNotes') rng.setWrap(true);
+    if (field === 'note' || field === 'reminders' || field === 'kiaiNotes' || field === 'steps') rng.setWrap(true);
     if (w) sh.setColumnWidth(col, w);
     if (field === 'id') sh.hideColumns(col);
   });
@@ -588,6 +617,14 @@ function buildTab_(ss, sch) {
   if (sch === SCHEMA.notes) {
     rules.push(SpreadsheetApp.newConditionalFormatRule().whenFormulaSatisfied('=$' + L('done') + '2=TRUE')
       .setFontColor('#8A8FA6').setRanges([sh.getRange(2, 1, body, width)]).build());
+  }
+  if (sch === SCHEMA.assignments) {
+    const all = sh.getRange(2, 1, body, width);
+    rules.push(SpreadsheetApp.newConditionalFormatRule().whenFormulaSatisfied('=$' + L('done') + '2=TRUE')
+      .setFontColor('#8A8FA6').setRanges([all]).build());
+    rules.push(SpreadsheetApp.newConditionalFormatRule()
+      .whenFormulaSatisfied('=AND($' + L('done') + '2<>TRUE,ISNUMBER($' + L('due') + '2),$' + L('due') + '2<TODAY())')
+      .setBackground('#FDE4EA').setFontColor('#9A2645').setRanges([sh.getRange(2, cols.due + 1, body, 1)]).build());
   }
   sh.setConditionalFormatRules(rules);
   return sh;

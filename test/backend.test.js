@@ -82,6 +82,31 @@ assert.equal(g2.type, 'General');
 assert.equal(g2.goal, true);
 assert.equal(r.state.notes.find(n => n.id === 'g1').type, 'Kumite');
 
+// follow up on a sheet that doesn't have the new columns yet: they get added, nothing is lost
+const notesSh = B.main.getSheetByName('Notes');
+notesSh.grid[0] = notesSh.grid[0].map(h => (['Follow up', 'Ask who', 'Answered'].includes(h) ? '' : h));
+r = B.api({ session: S1, ops: [{ op: 'update', coll: 'notes', id: 'g1', data: { followUp: true, ask: 'Senpai', answered: false } }] });
+let g1 = r.state.notes.find(n => n.id === 'g1');
+assert.equal(g1.followUp, true);
+assert.equal(g1.ask, 'Senpai');
+r = B.api({ session: S1, ops: [{ op: 'update', coll: 'notes', id: 'g1', data: { answered: true } }] });
+assert.equal(r.state.notes.find(n => n.id === 'g1').answered, true);
+
+// assignments: own tab, created on first use if missing
+B.main.deleteSheet(B.main.getSheetByName('Assignments'));
+const due = new Date(2026, 9, 24, 12).getTime();
+r = B.api({ session: S1, ops: [{ op: 'add', coll: 'assignments', id: 'a1', data: {
+  title: 'Write out bunkai', kata: 'Bassai Dai', given: day, due, steps: '[x] Moves 1 to 4\n[ ] Moves 5 to 8', noteId: 'g1', done: false } }] });
+assert.ok(r.ok, JSON.stringify(r));
+assert.equal(r.state.assignments.length, 1);
+assert.equal(r.state.assignments[0].due, due);
+assert.equal(r.state.assignments[0].steps, '[x] Moves 1 to 4\n[ ] Moves 5 to 8');
+assert.equal(r.state.assignments[0].noteId, 'g1');
+r = B.api({ session: S1, ops: [{ op: 'update', coll: 'assignments', id: 'a1', data: { done: true, doneOn: due } }] });
+assert.equal(r.state.assignments[0].done, true);
+r = B.api({ session: S1, ops: [{ op: 'del', coll: 'assignments', id: 'a1' }] });
+assert.equal(r.state.assignments.length, 0);
+
 // sessions are stored hashed, never as the token itself
 assert.ok(!Object.keys(B.props).some(k => k.includes(S1)));
 console.log('backend tests passed');

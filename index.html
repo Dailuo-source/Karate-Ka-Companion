@@ -23,14 +23,20 @@
   --head:#E86A86;--danger:#FF8F8F;--ok:#86E0B5;--ring:rgba(140,155,255,.65);--scrim:rgba(5,6,15,.66);
   --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.40);
   --kata-f:#262E63;--kata-i:#B4BEFF;--kihon-f:#45321A;--kihon-i:#FFC979;--kumite-f:#4A1F2E;--kumite-i:#FF9DB3;
-  --sensei-f:#173D30;--sensei-i:#86E0B5;--goals-f:#382556;--goals-i:#D3A8FF;--general-f:#2A2E48;--general-i:#C9CDE0}
+  --sensei-f:#173D30;--sensei-i:#86E0B5;--goals-f:#382556;--goals-i:#D3A8FF;--general-f:#2A2E48;--general-i:#C9CDE0;
+  --goal-f:#3D3315;--goal-i:#FFD66B;--work-f:#3A2219;--work-t:#45261C;--work-i:#FFB08C;--work-c:#FF9A6B;
+  --fu-f:#16344A;--fu-i:#9AD6FF;--fu-c:#7CC8FF;--fu-line:#4E8DBA;--as-f:#382556;--as-i:#D3A8FF;--as-c:#C9A8FF;
+  --late-f:#4A1F2E;--late-i:#FF9DB3;--late-line:#6B2C40}
 :root[data-theme="light"]{color-scheme:light;
   --bg:#F2F3F7;--surface:#FFFFFF;--sunk:#E8EAF1;--ink:#1E2235;--muted:#5B6075;--line:#E1E4EE;
   --accent:#3B4BA8;--accent-ink:#FFFFFF;--hero:#1E2235;--hero-ink:#FFFFFF;--hero-muted:#C9CEE6;
   --head:#D9485F;--danger:#C0392B;--ok:#1F6B48;--ring:rgba(59,75,168,.45);--scrim:rgba(20,24,40,.45);
   --shadow:0 1px 2px rgba(30,34,53,.06),0 8px 24px rgba(30,34,53,.10);
   --kata-f:#E6E9FB;--kata-i:#2F3C8F;--kihon-f:#FFF0D9;--kihon-i:#7A4A00;--kumite-f:#FDE4EA;--kumite-i:#9A2645;
-  --sensei-f:#E2F4EC;--sensei-i:#1F6B48;--goals-f:#F1E6FB;--goals-i:#643592;--general-f:#E4E6EE;--general-i:#3A3F55}
+  --sensei-f:#E2F4EC;--sensei-i:#1F6B48;--goals-f:#F1E6FB;--goals-i:#643592;--general-f:#E4E6EE;--general-i:#3A3F55;
+  --goal-f:#FFF1C7;--goal-i:#7A5A00;--work-f:#FFE7DC;--work-t:#FFD5C2;--work-i:#9C3E14;--work-c:#FF9A6B;
+  --fu-f:#E0F1FC;--fu-i:#1D5E8A;--fu-c:#7CC8FF;--fu-line:#5FA3D4;--as-f:#F1E6FB;--as-i:#643592;--as-c:#C9A8FF;
+  --late-f:#FDE4EA;--late-i:#9A2645;--late-line:#F2B5C4}
 .t-kata{--tf:var(--kata-f);--ti:var(--kata-i)} .t-kihon{--tf:var(--kihon-f);--ti:var(--kihon-i)}
 .t-kumite{--tf:var(--kumite-f);--ti:var(--kumite-i)} .t-sensei{--tf:var(--sensei-f);--ti:var(--sensei-i)}
 .t-goals{--tf:var(--goals-f);--ti:var(--goals-i)} .t-general{--tf:var(--general-f);--ti:var(--general-i)}
@@ -87,11 +93,33 @@ button,.tile span,.pillr span{transition:transform .12s ease,filter .12s ease,ba
 .nsnip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.35}
 .pin{width:16px;height:16px;color:var(--accent);flex-shrink:0;margin-top:2px}
 
-.hero{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--hero);color:var(--hero-ink);border-radius:22px;padding:14px 16px}
-.hero .lbl{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--hero-muted)}
-.hero .big{font-size:17px;font-weight:800}
-.hero svg.star{width:40px;height:40px;flex-shrink:0}
-.heroes{display:flex;flex-direction:column;gap:8px;padding:12px 18px 0}
+.hero{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--work-f);color:var(--ink);border-radius:20px;padding:12px 14px}
+.hero .lbl{font-size:12px;font-weight:800;color:var(--work-i)}
+.hero .big{font-size:16px;font-weight:800}
+.hero svg.star{width:38px;height:38px;flex-shrink:0}
+.hero .go{width:20px;height:20px;color:var(--work-i);flex-shrink:0}
+.heroes{display:flex;flex-direction:column;gap:8px;padding:8px 18px 0}
+
+/* markers (Gary, Oct 21): each has its own symbol, colour and shape.
+   Goal = gold star, solid pill · Working on = coral flame, solid pill · Follow up = sky bell, dashed outline ·
+   Assignment = lavender clipboard, square tag with its due day */
+.mk{display:inline-flex;align-items:center;margin-left:6px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:900;vertical-align:1px;white-space:nowrap}
+.mk-goal{background:#FFD66B;color:#3A2A00}
+.mk-work{background:var(--work-c);color:#3A1606}
+.mk-fu{border:1.5px dashed var(--fu-c);color:var(--fu-i);padding:0 7px}
+.mk-as{border-radius:6px;border:1px solid var(--as-c);background:var(--as-f);color:var(--as-i)}
+.mk-as.mk-late{border-color:var(--late-i);background:var(--late-f);color:var(--late-i)}
+.sec{display:flex;align-items:center;gap:6px;margin:16px 18px 0;font-size:12px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}
+.sec svg{width:18px;height:18px}
+.sec-work{color:var(--work-i)}
+.sec-fu{color:var(--fu-i)}
+.fus{display:flex;flex-direction:column;gap:8px;padding:8px 18px 0}
+.fu{display:flex;align-items:center;gap:10px;border:1.5px dashed var(--fu-line);border-radius:16px;padding:5px 5px 5px 12px}
+.fu .fubody{flex:1;min-width:0;text-align:left;padding:4px 0}
+.fu .who{display:block;font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:var(--fu-i)}
+.fu .big{display:block;font-size:15px;font-weight:800}
+.tick{width:44px;height:44px;border-radius:12px;background:var(--fu-f);color:var(--fu-i);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tick svg{width:20px;height:20px}
 
 .empty{text-align:center;padding:40px 24px;color:var(--muted);font-weight:700}
 .empty svg{width:96px;height:96px;display:block;margin:0 auto 12px}
@@ -99,7 +127,7 @@ button,.tile span,.pillr span{transition:transform .12s ease,filter .12s ease,ba
 /* bottom nav + add button */
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 .nav .in{max-width:560px;margin:0 auto;display:flex;justify-content:space-around;height:var(--navh)}
-.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:72px;font-size:12px;font-weight:800;color:var(--muted);border-radius:16px}
+.tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px;padding:0 4px;font-size:12px;font-weight:800;color:var(--muted);border-radius:16px}
 .tab svg{width:24px;height:24px}
 .tab[aria-selected="true"]{color:var(--accent)}
 .fab{position:fixed;z-index:6;right:max(18px,calc(50vw - 262px));bottom:calc(var(--navh) + 20px + env(safe-area-inset-bottom));width:62px;height:62px;border-radius:22px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.35)}
@@ -153,11 +181,69 @@ button,.tile span,.pillr span{transition:transform .12s ease,filter .12s ease,ba
 
 /* goals */
 .goal{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:18px;padding:12px}
-.check{width:44px;height:44px;border-radius:14px;background:var(--goals-f);color:var(--goals-i);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.check{width:44px;height:44px;border-radius:14px;background:var(--goal-f);color:var(--goal-i);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .check svg{width:24px;height:24px}
 .check[aria-pressed="true"]{background:var(--sensei-f);color:var(--sensei-i)}
 .goal .nbody{text-align:left;padding-top:2px}
 .goal.done .ntitle{text-decoration:line-through;color:var(--muted)}
+
+/* assignments */
+.as{display:flex;gap:12px;width:100%;text-align:left;background:var(--surface);border-radius:20px;padding:12px 14px;box-shadow:var(--shadow);border:1.5px solid transparent}
+.as.late{border-color:var(--late-line)}
+.as .ico,.ico.as-ico{background:var(--as-f)}
+.as .row1{display:flex;align-items:center;gap:8px}
+.as .row1 .meta{flex:1;min-width:0}
+.as .mk{margin-left:0}
+.as.done .ntitle{text-decoration:line-through;color:var(--muted)}
+.prog{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;font-weight:800;color:var(--muted)}
+.prog i{flex:1;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden;display:block}
+.prog i b{display:block;height:100%;background:var(--as-c);border-radius:3px}
+.dhead.g-late{color:var(--late-i)}
+.dhead.g-soon{color:var(--as-i)}
+.atitle{display:flex;gap:12px;align-items:flex-start}
+.atitle h3{margin:2px 0 0;font-size:22px;font-weight:900;line-height:1.2;text-wrap:balance}
+.ico.big{width:56px;height:56px;border-radius:18px}
+.ico.big svg{width:42px;height:42px}
+.afacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.fact{background:var(--surface);border-radius:16px;padding:10px 12px;text-align:left;min-width:0}
+.fact small{display:block;font-size:11px;font-weight:900;letter-spacing:.5px;color:var(--muted);text-transform:uppercase}
+.fact b{display:block;font-size:15px;font-weight:800}
+.fact.due{background:var(--as-f);box-shadow:inset 0 0 0 1px var(--as-c)}
+.fact.due small{color:var(--as-i)}
+.fact.late{background:var(--late-f);box-shadow:inset 0 0 0 1px var(--late-i)}
+.fact.late small{color:var(--late-i)}
+.fact.kata{grid-column:1/-1;background:var(--kata-f)}
+.fact.kata small{color:var(--kata-i)}
+.steps{background:var(--surface);border-radius:20px;padding:10px 14px;margin-top:12px}
+.stp{display:flex;align-items:center;gap:12px;min-height:44px;width:100%;text-align:left;font-size:15px;font-weight:700;border-radius:10px}
+.stp .bx{width:24px;height:24px;border-radius:8px;border:2px solid var(--as-c);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#24123F}
+.stp .bx svg{width:16px;height:16px}
+.stp[aria-pressed="true"] .bx{background:var(--as-c)}
+.stp[aria-pressed="true"] .tx{text-decoration:line-through;color:var(--muted)}
+.btn.ok{background:var(--ok);color:#0D2E21;font-weight:900}
+[data-theme=light] .btn.ok{color:#FFFFFF}
+.btn.ok svg{width:20px;height:20px}
+.opt.as-link{background:var(--as-f);color:var(--as-i);gap:10px}
+.opt.as-link svg{width:24px;height:24px}
+.opt.fu-link{background:var(--fu-f);color:var(--fu-i);gap:10px}
+.fab.fab-as{background:var(--as-c);color:#24123F}
+.dotn{position:absolute;top:6px;right:10px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--head);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+/* marker switches in the note form */
+.mrow{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:16px;padding:8px 14px 8px 8px;margin-top:8px;font-weight:800}
+.mrow .mi{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--mf);color:#1E2235}
+.mrow .mi svg{width:28px;height:28px}
+.mrow .nm{display:block;font-size:15px;color:var(--mc)}
+.mrow input[type=checkbox]{width:22px;height:22px;accent-color:var(--mk);flex-shrink:0}
+.m-goal{--mf:var(--goal-f);--mc:var(--goal-i);--mk:#FFD66B}
+.m-work{--mf:var(--work-t);--mc:var(--work-i);--mk:var(--work-c)}
+.m-fu{--mf:var(--fu-f);--mc:var(--fu-i);--mk:var(--fu-c)}
+.fubox{margin-top:8px;border-radius:16px;background:var(--surface);border:1.5px dashed transparent}
+.fubox .mrow{margin-top:0;background:transparent}
+.fubox .who{display:none;gap:6px;flex-wrap:wrap;padding:0 12px 10px 60px}
+.fubox:has(input[name=followUp]:checked){background:var(--fu-f);border-color:var(--fu-c)}
+.fubox:has(input[name=followUp]:checked) .mi{background:var(--surface)}
+.fubox:has(input[name=followUp]:checked) .who{display:flex}
+.who .pillr span{height:36px;padding:0 12px;font-size:13px}
 
 /* panels */
 #sheetWrap{position:fixed;inset:0;z-index:20;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
@@ -174,7 +260,7 @@ button,.tile span,.pillr span{transition:transform .12s ease,filter .12s ease,ba
 .btns .btn{flex:1 1 0}
 .btns.col{flex-direction:column}
 .btns.col .btn{flex:none}
-.field{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.field{display:flex;flex-direction:column;gap:6px;margin-top:14px;min-width:0}
 .field>span,.legend{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.3px}
 .inp{width:100%;border:none;outline:none;background:var(--surface);border-radius:14px;padding:12px 14px;font-size:16px;font-weight:700}
 textarea.inp{resize:vertical;min-height:120px;line-height:1.45;font-weight:600}
@@ -191,7 +277,6 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.45;font-weight:600}
 .swrow input{width:22px;height:22px;accent-color:var(--accent)}
 .goalrow .star{width:30px;height:30px;flex-shrink:0;color:#1E2235}
 .swsub{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px}
-.gbadge{display:inline-flex;align-items:center;margin-left:8px;padding:1px 8px;border-radius:999px;background:#FFD66B;color:#3A2A00;font-size:11px;font-weight:900;vertical-align:1px}
 .savebar{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom));display:flex;gap:10px;margin:18px -18px calc(-24px - env(safe-area-inset-bottom));padding:12px 18px calc(14px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);z-index:2}
 .savebar .btn{flex:1 1 0}
 .savebar .btn.save{flex:2 1 0;background:var(--ok);color:#0D2E21;border-color:transparent;font-weight:900;display:inline-flex;align-items:center;justify-content:center;gap:8px}
@@ -227,9 +312,11 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.45;font-weight:600}
   .nav-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:var(--head);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center}
   .typechips,.fab,.top .ibtn,.top>svg,.top .ttl h1{display:none}
   .heroes{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
-  .note,.hero,.goal .nbody,.opt{cursor:pointer}
-  .note:hover,.hero:hover{filter:brightness(1.08)}
-  .note.active,.hero.active,.krow.active{outline:2px solid var(--accent);outline-offset:-2px}
+  .note,.hero,.goal .nbody,.opt,.as,.fu .fubody{cursor:pointer}
+  .note:hover,.hero:hover,.as:hover{filter:brightness(1.08)}
+  .note.active,.hero.active,.krow.active,.as.active{outline:2px solid var(--accent);outline-offset:-2px}
+  .fu .fubody.active{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+  .dotn{position:static;margin-left:auto}
   .krow{cursor:pointer}
   .krow:hover{filter:brightness(1.08)}
   .kpanehead{gap:10px}
@@ -291,6 +378,10 @@ const TYPES=[{k:"Kata",c:"kata",s:"Kata"},{k:"Kihon",c:"kihon",s:"Kihon"},{k:"Ku
 /* Goals are a flag on any note (n.goal), not a type. Old "Goals" notes read as General + goal. */
 const FROM=[{k:"Me",s:"My own note"},{k:"Sensei",s:"Sensei"},{k:"Seminar",s:"Seminar"}];
 const STATUSES=["Learning","Polishing","Solid"];
+/* Follow up (Gary, Oct 21): a question to ask or a thing to check. Assignments only ever come from Sensei. */
+const ASKS=[{k:"Sensei",s:"Ask Sensei"},{k:"Senpai",s:"Ask Senpai"},{k:"Myself",s:"Check myself"}];
+const askLbl=k=>(ASKS.find(a=>eqi(a.k,k))||ASKS[0]).s;
+const WORK_MAX=3;
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -317,7 +408,10 @@ const ICONS={
   kumite:`<path d="M9 12a7 7 0 0 1 14 0v8a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5z" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M9 15a3 3 0 0 0-3 3 3 3 0 0 0 3 3" fill="#fff" stroke="currentColor" stroke-width="1.8"/><rect x="10" y="24" width="12" height="4" rx="1.5" fill="#E86A86" stroke="currentColor" stroke-width="1.5"/>${FACE(15,2.6).replace(/cx="16"/g,'cx="16.5"')}`,
   sensei:`<path d="M6 7h20a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H15l-5 4v-4H6a3 3 0 0 1-3-3V10a3 3 0 0 1 3-3z" fill="#fff" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>${FACE(14,3)}`,
   goals:`<path d="M16 3.5l3.6 7.7 8.4.8-6.4 5.6 2 8.4L16 21.6 8.4 26l2-8.4L4 12l8.4-.8z" fill="#FFD66B" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>${FACE(14.5,2.6)}`,
-  general:`<rect x="7" y="6" width="18" height="22" rx="3" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M11 4v5M16 4v5M21 4v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>${FACE(16,3)}`
+  general:`<rect x="7" y="6" width="18" height="22" rx="3" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M11 4v5M16 4v5M21 4v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>${FACE(16,3)}`,
+  work:`<path d="M16 3c1.5 4.5 9 8 9 15.5a9 9 0 0 1-18 0c0-4 2.2-6.6 4.5-8.5.2 2.8 1.2 4 2.4 4.3C13.6 9.5 13.5 6.3 16 3z" fill="#FF9A6B" stroke="#1E2235" stroke-width="1.6" stroke-linejoin="round"/>${FACE(19,3)}`,
+  follow:`<path d="M16 4.5c1 0 1.8.8 1.8 1.8v.7A7.5 7.5 0 0 1 23.5 14.5v5l2.5 3.5H6l2.5-3.5v-5A7.5 7.5 0 0 1 14.2 7v-.7c0-1 .8-1.8 1.8-1.8z" fill="#7CC8FF" stroke="#1E2235" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="26.3" r="2.3" fill="#FFD66B" stroke="#1E2235" stroke-width="1.4"/>${FACE(15.5,3)}`,
+  assign:`<rect x="7" y="6" width="18" height="22" rx="3" fill="#fff" stroke="#1E2235" stroke-width="1.8"/><rect x="11.5" y="3.5" width="9" height="5" rx="1.6" fill="#C9A8FF" stroke="#1E2235" stroke-width="1.5"/>${FACE(14,3)}<path d="M12 22.5l2.2 2.2 5-5" fill="none" stroke="#8A5BD6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`
 };
 const icon=c=>`<svg viewBox="0 0 32 32" aria-hidden="true">${ICONS[c]||ICONS.general}</svg>`;
 function mascot(mood){
@@ -339,6 +433,7 @@ const I={
   sort:SVG('<path d="M7 4v16M3 16l4 4 4-4M14 6h7M14 11h5M14 16h3"/>'),
   notes:SVG('<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/>'),
   kata:SVG('<rect x="5" y="5" width="14" height="15" rx="2"/><path d="M3 4h18M3 21h18"/>'),
+  clip:SVG('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 14l2 2 4-4"/>'),
   star:SVG('<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>'),
   check:SVG('<path d="M5 12.5l4.5 4.5L19 7"/>',3),
   pin:SVG('<path d="M9 4h6l-1 6 4 3v2H6v-2l4-3z"/><path d="M12 15v6"/>'),
@@ -351,12 +446,12 @@ const I={
 /* ---------- state ---------- */
 let API=LS.get("api","")||API_URL, CLIENT=LS.get("client","")||CLIENT_ID;
 let SESSION=LS.get("session",""), ROLE=LS.get("role",""), EMAIL=LS.get("email",""), THEME=LS.get("theme","dark");
-let S={notes:[],kata:[],access:[],kataList:[]};
+let S={notes:[],assignments:[],kata:[],access:[],kataList:[]};
 let auth="signin", ready=false, noAccess={email:"",requested:false}, setupMsg="";
 let queue=[],inflight=false,flushT=0,retryT=0,lastSync=0,syncState="",sheetUrl=LS.get("sheet","");
 let kataSort=LS.get("ksort","adv")==="beg"?"beg":"adv"; // adv = most advanced belt first (Gary, Oct 20)
 let tab=LS.get("tab","notes"), typeF="All", q="", dateF="all", sortNew=LS.get("sort","new")!=="old";
-let kataOpen=null, kq="", sheet=null, lastFocus=null, kiaiOpen=false;
+let kataOpen=null, kq="", sheet=null, lastFocus=null, kiaiOpen=false, asView=LS.get("asview","todo")==="done"?"done":"todo";
 
 function readLinkParams(){
   try{
@@ -375,7 +470,10 @@ function normalize(st){
   return{
     notes:(st.notes||[]).map(r=>Object.assign({},r,{type:typeOf(r.type).k,date:+r.date||+r.added||Date.now(),added:+r.added||0,
       title:str(r.title),note:String(r.note==null?"":r.note),kata:str(r.kata),from:FROM.find(f=>eqi(f.k,r.from))?FROM.find(f=>eqi(f.k,r.from)).k:"Me",
-      video:str(r.video),pinned:!!r.pinned,goal:!!r.goal||eqi(r.type,"Goals"),done:!!r.done})),
+      video:str(r.video),pinned:!!r.pinned,goal:!!r.goal||eqi(r.type,"Goals"),done:!!r.done,
+      followUp:!!r.followUp,ask:(ASKS.find(a=>eqi(a.k,r.ask))||ASKS[0]).k,answered:!!r.answered})),
+    assignments:(st.assignments||[]).map(r=>Object.assign({},r,{title:str(r.title),kata:str(r.kata),given:+r.given||0,due:+r.due||0,
+      steps:String(r.steps==null?"":r.steps),note:String(r.note==null?"":r.note),noteId:str(r.noteId),done:!!r.done,doneOn:+r.doneOn||0,added:+r.added||0})),
     kata:(st.kata||[]).map(r=>Object.assign({},r,{kata:str(r.kata),status:STATUSES.find(s=>eqi(s,r.status))||"",kiais:r.kiais==null||r.kiais===""?null:+r.kiais,reminders:String(r.reminders==null?"":r.reminders),kiaiNotes:String(r.kiaiNotes==null?"":r.kiaiNotes)})),
     access:(st.access||[]).map(r=>Object.assign({},r,{email:str(r.email),status:str(r.status)||"Requested"})),
     kataList:Array.isArray(st.kataList)?st.kataList:[]
@@ -467,7 +565,7 @@ async function signIn(tok){
   signingIn=false;const sg=$("#signing");if(sg)sg.remove();
   handle(res,0);
 }
-function wipeLocal(){queue=[];S={notes:[],kata:[],access:[],kataList:[]};ready=false;["state","role","email","sheet"].forEach(LS.del);ROLE="";}
+function wipeLocal(){queue=[];S={notes:[],assignments:[],kata:[],access:[],kataList:[]};ready=false;["state","role","email","sheet"].forEach(LS.del);ROLE="";}
 function signOut(msg){
   SESSION="";LS.del("session");wipeLocal();EMAIL="";auth="signin";LS.set("signedOut","1");closeSheet();
   try{if(window.google&&google.accounts)google.accounts.id.disableAutoSelect();}catch(e){}
@@ -486,6 +584,20 @@ function kataNames(){
 }
 const kataEn=name=>{const k=S.kataList.find(x=>eqi(x.name,name));return k?k.en:"";};
 const noteTitle=n=>n.title||(n.kata&&n.type==="Kata"?n.kata:"")||String(n.note||"").split("\n")[0].slice(0,60)||"Untitled note";
+const workCount=except=>S.notes.filter(n=>n.pinned&&!(n.goal&&n.done)&&n.id!==except).length;
+const MK={goal:'<span class="mk mk-goal">★ Goal</span>',work:'<span class="mk mk-work">Working on</span>',fu:'<span class="mk mk-fu">Follow up</span>'};
+const marks=n=>(n.goal?MK.goal:"")+(n.pinned&&!(n.goal&&n.done)?MK.work:"")+(n.followUp&&!n.answered?MK.fu:"");
+/* assignments: steps are one per line, "[x] " in front = done */
+function parseSteps(txt){return String(txt||"").split("\n").filter(l=>l.trim()).map(l=>{const m=/^\s*\[( |x|X)?\]\s*/.exec(l);
+  return{done:!!(m&&/x/i.test(m[1]||"")),text:(m?l.slice(m[0].length):l).trim()};}).filter(x=>x.text);}
+const serSteps=st=>st.map(x=>(x.done?"[x] ":"[ ] ")+x.text).join("\n");
+const daysTo=ms=>Math.round((keyDate(dayKey(ms))-keyDate(todayKey()))/864e5);
+const shortDate=ms=>keyDate(dayKey(ms)).toLocaleDateString([],{month:"short",day:"numeric"});
+const isLate=a=>!a.done&&!!a.due&&daysTo(a.due)<0;
+function dueLabel(a){if(!a.due)return "No due date";const d=daysTo(a.due);
+  if(d<-1)return "Was due "+shortDate(a.due);if(d===-1)return "Was due yesterday";if(d===0)return "Due today";if(d===1)return "Due tomorrow";
+  if(d<7)return "Due "+keyDate(dayKey(a.due)).toLocaleDateString([],{weekday:"short"});return "Due "+shortDate(a.due);}
+function relDue(a){const d=daysTo(a.due);return d===0?"today":d===1?"tomorrow":d>1?"in "+d+" days":d===-1?"1 day late":(-d)+" days late";}
 const byDate=(a,b)=>(a.date-b.date)||((a.added||0)-(b.added||0));
 const DATE_OPTS=[["all","All dates"],["week","Last 7 days"],["month","This month"],["3m","Last 3 months"]];
 const dateLabel=()=>{const o=DATE_OPTS.find(x=>x[0]===dateF);return o?o[1]:fmtMonth(dateF);};
@@ -518,8 +630,8 @@ function render(){
   if(!ready){app.innerHTML=authScreen("sleepy","Opening your notes…","","");return;}
   let html="";
   if(tab==="kata"&&kataOpen&&!wide())html=kataPage(kataOpen);
-  else html=header()+(tab==="kata"?viewKataList():tab==="goals"?viewGoals():viewNotes());
-  app.innerHTML=html+nav()+(ROLE==="owner"&&!(tab==="kata"&&!kataOpen)?`<button class="fab" data-act="new" aria-label="New note">${I.plus}</button>`:"");
+  else html=header()+(tab==="kata"?viewKataList():tab==="goals"?viewGoals():tab==="assignments"?viewAssignments():viewNotes());
+  app.innerHTML=html+nav()+(ROLE==="owner"&&!(tab==="kata"&&!kataOpen)?`<button class="fab ${tab==="assignments"?"fab-as":""}" data-act="new" aria-label="${tab==="assignments"?"New assignment":"New note"}">${I.plus}</button>`:"");
   setSync(syncState||"ok");
   replayTap();
   if(wide()&&tab==="kata"&&kataOpen&&!sheet)openSheet({type:"kata",name:kataOpen});
@@ -539,18 +651,21 @@ function nav(){
   const letter=esc((EMAIL||"?").charAt(0).toUpperCase());
   const types=[{k:"All",c:"",s:"All notes"}].concat(TYPES).map(t=>{const n=t.k==="All"?S.notes.length:S.notes.filter(x=>x.type===t.k).length;
     return`<button class="ntype ${t.c?"t-"+t.c:"t-all"}" data-act="navtype" data-v="${esc(t.k)}" aria-pressed="${tab==="notes"&&!kataOpen&&typeF===t.k}"><span class="ico">${t.c?icon(t.c):I.notes}</span><span class="grow">${esc(t.s||t.k)}</span><span class="cnt">${n}</span></button>`;}).join("");
-  const side=`<div class="nside">${ROLE==="owner"?`<button class="btn primary nnew" data-act="new">${I.plus}New note</button>`:""}<div class="nhead">Note types</div>${types}</div>
+  const side=`<div class="nside">${ROLE==="owner"?`<button class="btn primary nnew" data-act="new">${I.plus}${tab==="assignments"?"New assignment":"New note"}</button>`:""}<div class="nhead">Note types</div>${types}</div>
     <div class="nfoot"><button class="nset" data-act="account"><span class="nav-av">${letter}</span><span class="grow"><b>Settings</b><span class="sub">${esc(EMAIL)}</span></span></button></div>`;
-  const t=(k,lbl,ic)=>`<button class="tab" role="tab" data-act="tab" data-v="${k}" aria-selected="${tab===k}">${ic}${lbl}</button>`;
-  return `<nav class="nav" aria-label="Sections"><div class="nbrand">${mascot("happy").replace('class="m"','width="46" height="46" aria-hidden="true"')}<span>Karate-Ka<br>Companion</span></div><div class="in" role="tablist">${t("notes","Notes",I.notes)}${t("kata","Kata",I.kata)}${t("goals","Goals",I.star)}</div>${side}</nav>`;
+  const t=(k,lbl,ic,extra)=>`<button class="tab" role="tab" data-act="tab" data-v="${k}" aria-selected="${tab===k}">${ic}${lbl}${extra||""}</button>`;
+  const late=S.assignments.filter(isLate).length;
+  return `<nav class="nav" aria-label="Sections"><div class="nbrand">${mascot("happy").replace('class="m"','width="46" height="46" aria-hidden="true"')}<span>Karate-Ka<br>Companion</span></div><div class="in" role="tablist">${t("notes","Notes",I.notes)}${t("kata","Kata",I.kata)}${t("goals","Goals",I.star)}${t("assignments","Assignments",I.clip,late?`<span class="dotn" aria-label="${late} overdue">${late}</span>`:"")}</div>${side}</nav>`;
 }
-const GBADGE=`<span class="gbadge">★ Goal</span>`;
+
 /* Big screens (Gary, Oct 20): the panel is a docked column on the right, not a dark overlay.
    The list stays clickable and a new note replaces the open one. */
 const WIDE=matchMedia("(min-width:1000px)");const wide=()=>WIDE.matches;
 const paneEmpty=()=>`<div class="pane-empty">${mascot("sleepy")}<p>Pick a note to read it here.</p></div>`;
 function markActive(){const cur=sheet&&(sheet.type==="note"||sheet.type==="form")?sheet.id:null;
   document.querySelectorAll("#app [data-act=open-note]").forEach(el=>el.classList.toggle("active",!!cur&&el.dataset.id===cur));
+  const ca=sheet&&(sheet.type==="assign"||sheet.type==="aform")?sheet.id:null;
+  document.querySelectorAll("#app [data-act=open-assign]").forEach(el=>el.classList.toggle("active",!!ca&&el.dataset.id===ca));
   const kc=sheet&&sheet.type==="kata"?sheet.name:sheet&&sheet.back?sheet.back.name:null;
   document.querySelectorAll("#app [data-act=open-kata]").forEach(el=>el.classList.toggle("active",!!kc&&eqi(el.dataset.v,kc)));}
 const curKata=()=>sheet&&sheet.type==="kata"?sheet.name:sheet&&sheet.back&&sheet.back.type==="kata"&&(sheet.type==="rem"||sheet.type==="kiai")?sheet.back.name:kataOpen;
@@ -559,20 +674,24 @@ function noteCard(n){
   const meta=[`<b>${esc(t.s)}</b>`,n.kata&&title!==n.kata?esc(n.kata):"",n.from!=="Me"?esc(n.from):""].filter(Boolean).join(" · ");
   const snip=n.title||n.type!=="Kata"||!n.kata?String(n.note||"").replace(/\s+/g," "):String(n.note||"").replace(/\s+/g," ");
   return `<button class="note t-${t.c}" data-act="open-note" data-id="${esc(n.id)}"><span class="ico">${icon(t.c)}</span>
-    <span class="nbody"><span class="meta">${meta}${n.goal?GBADGE:""}</span><span class="ntitle">${esc(title)}</span>${snip&&snip!==title?`<span class="nsnip">${esc(snip)}</span>`:""}</span>
-    ${n.pinned?`<span class="pin" aria-label="Pinned">${I.pin}</span>`:""}</button>`;
+    <span class="nbody"><span class="meta">${meta}${marks(n)}</span><span class="ntitle">${esc(title)}</span>${snip&&snip!==title?`<span class="nsnip">${esc(snip)}</span>`:""}</span></button>`;
 }
 function viewNotes(){
-  const pinned=S.notes.filter(n=>n.pinned&&!(n.goal&&n.done)).sort((a,b)=>byDate(b,a)).slice(0,3);
-  const heroes=pinned.length?`<div class="heroes">${pinned.map(n=>`<button class="hero" data-act="open-note" data-id="${esc(n.id)}">
-      <svg class="star" viewBox="0 0 32 32" aria-hidden="true">${ICONS.goals.replace(/currentColor/g,"#1E2235")}</svg>
-      <span class="grow"><span class="lbl" style="display:block">Working on</span><span class="big">${esc([n.kata&&noteTitle(n)!==n.kata?n.kata:"",noteTitle(n)].filter(Boolean).join(" · "))}</span></span>
-      <span style="width:20px;height:20px;color:var(--hero-muted)">${I.right}</span></button>`).join("")}</div>`:"";
+  const pinned=S.notes.filter(n=>n.pinned&&!(n.goal&&n.done)).sort((a,b)=>byDate(b,a));
+  const heroes=pinned.length?`<h2 class="sec sec-work">${icon("work")}Working on · ${pinned.length<=WORK_MAX?pinned.length+" of "+WORK_MAX:pinned.length}</h2>
+    <div class="heroes">${pinned.map(n=>`<button class="hero" data-act="open-note" data-id="${esc(n.id)}">
+      <svg class="star" viewBox="0 0 32 32" aria-hidden="true">${ICONS.work}</svg>
+      <span class="grow" style="min-width:0"><span class="lbl" style="display:block">${esc(n.kata&&noteTitle(n)!==n.kata?n.kata:typeOf(n.type).s)}</span><span class="big">${esc(noteTitle(n))}</span></span>
+      <span class="go">${I.right}</span></button>`).join("")}</div>`:"";
+  const fus=S.notes.filter(n=>n.followUp&&!n.answered).sort((a,b)=>byDate(a,b));
+  const follow=fus.length?`<h2 class="sec sec-fu">${icon("follow")}Follow up · ${fus.length}</h2>
+    <div class="fus">${fus.map(n=>`<div class="fu"><button class="fubody" data-act="open-note" data-id="${esc(n.id)}"><span class="who">${esc(askLbl(n.ask))}</span><span class="big">${esc(noteTitle(n))}</span></button>
+      ${ROLE==="owner"?`<button class="tick" data-act="answer" data-id="${esc(n.id)}" aria-label="Mark answered: ${esc(noteTitle(n))}">${I.check}</button>`:""}</div>`).join("")}</div>`:"";
   const chips=[{k:"All",c:""}].concat(TYPES).map(t=>`<button class="chip ${t.c?"t-"+t.c:""}" data-act="type" data-v="${esc(t.k)}" aria-pressed="${typeF===t.k}">${esc(t.s||t.k)}</button>`).join("");
   return `<div class="search">${I.search}<label for="q" class="sr">Search notes</label><input id="q" type="search" placeholder="Search notes, kata, sensei…" value="${esc(q)}" autocomplete="off"></div>
     <div class="chips typechips" role="group" aria-label="Note type">${chips}</div>
-    ${heroes}
-    <div class="row pad" style="margin-top:12px"><button class="sbtn" data-act="datef">${I.cal}${esc(dateLabel())}<span style="width:14px;height:14px;display:inline-flex">${I.down}</span></button>
+    ${heroes}${follow}
+    <div class="row pad" style="margin-top:16px"><button class="sbtn" data-act="datef">${I.cal}${esc(dateLabel())}<span style="width:14px;height:14px;display:inline-flex">${I.down}</span></button>
       <span class="grow"></span><button class="sbtn" data-act="sort" aria-label="Sort order: ${sortNew?"newest first":"oldest first"}">${I.sort}${sortNew?"Newest first":"Oldest first"}</button></div>
     <div id="list">${notesList()}</div>`;
 }
@@ -592,6 +711,26 @@ function viewGoals(){
   if(!goals.length)return `<div class="empty">${mascot("happy")}No goals yet.${ROLE==="owner"?"<br>Tap + to write one, or tick \"Mark as a goal\" on any note.":""}</div>`;
   return `<div class="list"><h2 class="dhead">Working towards</h2>${open.map(row).join("")||'<p class="sub">All done. Time for a new one!</p>'}
     ${done.length?`<h2 class="dhead" style="margin-top:10px">Done</h2>${done.map(row).join("")}`:""}</div>`;
+}
+function asCard(a){
+  const st=parseSteps(a.steps),dn=st.filter(x=>x.done).length,late=isLate(a);
+  return `<button class="as ${late?"late":""} ${a.done?"done":""}" data-act="open-assign" data-id="${esc(a.id)}"><span class="ico">${icon("assign")}</span>
+    <span class="nbody"><span class="row1"><span class="meta">${esc(a.kata||"General")}${a.given?" · given "+esc(shortDate(a.given)):""}</span>
+      <span class="mk mk-as ${late?"mk-late":""}">${esc(a.done?"Done"+(a.doneOn?" "+shortDate(a.doneOn):""):dueLabel(a))}</span></span>
+    <span class="ntitle">${esc(a.title)}</span>
+    ${st.length?`<span class="prog"><i><b style="width:${Math.round(dn/st.length*100)}%"></b></i>${dn}/${st.length} steps</span>`:""}</span></button>`;
+}
+function viewAssignments(){
+  const todo=S.assignments.filter(a=>!a.done),done=S.assignments.filter(a=>a.done).sort((a,b)=>(b.doneOn||0)-(a.doneOn||0));
+  const seg=`<div class="chips" role="group" aria-label="Show"><button class="chip" data-act="asview" data-v="todo" aria-pressed="${asView==="todo"}">To do · ${todo.length}</button><button class="chip" data-act="asview" data-v="done" aria-pressed="${asView==="done"}">Done · ${done.length}</button></div>`;
+  if(!S.assignments.length)return seg+`<div class="empty">${mascot("happy")}No assignments yet.${ROLE==="owner"?"<br>Tap + when Sensei gives you one.":""}</div>`;
+  if(asView==="done")return seg+(done.length?`<div class="list">${done.map(asCard).join("")}</div>`:`<div class="empty">${mascot("sleepy")}Nothing marked done yet.</div>`);
+  todo.sort((a,b)=>(a.due||9e15)-(b.due||9e15)||(a.added||0)-(b.added||0));
+  const groups=[["Overdue","late",a=>a.due&&daysTo(a.due)<0],["This week","soon",a=>a.due&&daysTo(a.due)<7],["Later","",a=>a.due],["No due date","",()=>true]];
+  const used={};let out="";
+  groups.forEach(([name,cls,fn])=>{const items=todo.filter(a=>!used[a.id]&&fn(a));items.forEach(a=>{used[a.id]=1;});
+    if(items.length)out+=`<h2 class="dhead ${cls?"g-"+cls:""}">${name}</h2>${items.map(asCard).join("")}`;});
+  return seg+(out?`<div class="list">${out}</div>`:`<div class="empty">${mascot("happy")}All done. Nice work!</div>`);
 }
 function viewKataList(){
   return `<div class="search">${I.search}<label for="kq" class="sr">Search kata</label><input id="kq" type="search" placeholder="Search kata…" value="${esc(kq)}" autocomplete="off"></div>
@@ -673,24 +812,29 @@ function closeSheet(){const prev=sheet;
   if(prev&&prev.type==="kata")kataOpen=null;
   sheet=null;const w=$("#sheetWrap");if(w)w.hidden=true;document.body.style.overflow="";if(wide())$("#sheet").innerHTML=paneEmpty();markActive();if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
 function renderSheet(){if(!sheet)return;const b=$("#sheet");
-  b.innerHTML=sheet.type==="kata"?kataPage(sheet.name,true):sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):sheet.type==="kiai"?kiaiSheet(sheet.name):accountSheet();
-  b.setAttribute("aria-label",sheet.type==="form"?"Note":sheet.type);replayTap();}
+  b.innerHTML=sheet.type==="kata"?kataPage(sheet.name,true):sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):sheet.type==="kiai"?kiaiSheet(sheet.name):sheet.type==="assign"?assignSheet(sheet.id):sheet.type==="aform"?assignForm(sheet):accountSheet();
+  b.setAttribute("aria-label",sheet.type==="form"?"Note":sheet.type==="aform"||sheet.type==="assign"?"Assignment":sheet.type);replayTap();}
 const shead=t=>`<div class="shead"><h2>${esc(t)}</h2><button type="button" class="ibtn close" data-act="close" aria-label="Close">${I.close}</button></div>`;
 function noteSheet(id){
   const n=S.notes.find(x=>x.id===id);if(!n)return shead("Note")+'<p class="sub">This note was removed.</p>';
-  const t=typeOf(n.type),can=ROLE==="owner";
+  const t=typeOf(n.type),can=ROLE==="owner",links=S.assignments.filter(a=>a.noteId===n.id);
   return shead(noteTitle(n))+`<div class="row t-${t.c}" style="gap:10px"><span class="ico">${icon(t.c)}</span>
-    <div><div class="meta"><b>${esc(t.s)}</b>${n.from!=="Me"?" · from "+esc(n.from):""}${n.goal?GBADGE:""}</div><div style="font-weight:800">${esc(fmtDay(dayKey(n.date),true))}</div></div></div>
+    <div><div class="meta"><b>${esc(t.s)}</b>${n.from!=="Me"?" · from "+esc(n.from):""}${marks(n)}</div><div style="font-weight:800">${esc(fmtDay(dayKey(n.date),true))}</div></div></div>
     ${n.kata?`<button class="opt" data-act="open-kata" data-v="${esc(n.kata)}">${esc(n.kata)}<span class="grow"></span><span style="width:18px;height:18px">${I.right}</span></button>`:""}
     ${n.note?`<div class="view-body">${esc(n.note)}</div>`:""}
     ${n.video?`<p style="margin-top:14px"><a href="${esc(/^https?:\/\//i.test(n.video)?n.video:"https://"+n.video)}" target="_blank" rel="noopener" style="font-weight:800;display:inline-flex;gap:6px;align-items:center"><span style="width:20px;height:20px;display:inline-flex">${I.video}</span>Watch video</a></p>`:""}
+    ${n.followUp?`<div class="opt fu-link" style="cursor:default">${icon("follow").replace("<svg",'<svg width="26" height="26"')}<span class="grow">${n.answered?"Follow up answered":esc(askLbl(n.ask))}</span>
+      ${can?`<button class="mini" data-act="answer" data-id="${esc(n.id)}">${n.answered?"Ask again":"Mark answered"}</button>`:""}</div>`:""}
+    ${links.map(a=>`<button class="opt as-link" data-act="open-assign" data-id="${esc(a.id)}">${icon("assign")}<span class="grow">${esc(a.title)}</span><span style="font-size:12px">${esc(a.done?"Done":dueLabel(a))}</span></button>`).join("")}
+    ${can&&!links.length?`<button class="opt as-link" data-act="to-assign" data-id="${esc(n.id)}">${icon("assign")}<span class="grow">Turn into an assignment</span><span style="width:18px;height:18px">${I.right}</span></button>`:""}
     ${can?`<div class="btns"><button class="btn primary" data-act="edit-note" data-id="${esc(n.id)}">Edit</button>
-      <button class="btn" data-act="pin" data-id="${esc(n.id)}">${n.pinned?"Unpin":"Pin"}</button>
+      <button class="btn" data-act="pin" data-id="${esc(n.id)}">${n.pinned?"Stop working on":"Working on"}</button>
       <button class="btn danger" data-act="del-note" data-id="${esc(n.id)}" data-confirm="Tap again to delete">Delete</button></div>`:""}`;
 }
 function formSheet(f){
   const n=f.id?S.notes.find(x=>x.id===f.id):null;
-  const v=n||{type:f.preType||(typeF!=="All"?typeF:f.preGoal?"General":"Kata"),kata:f.preKata||"",date:Date.now(),from:"Me",title:"",note:"",video:"",pinned:false,goal:!!f.preGoal};
+  const v=n||{type:f.preType||(typeF!=="All"?typeF:f.preGoal?"General":"Kata"),kata:f.preKata||"",date:Date.now(),from:"Me",title:"",note:"",video:"",pinned:false,goal:!!f.preGoal,followUp:false,answered:false,ask:"Sensei"};
+  const wc=workCount(n&&n.id);
   const names=kataNames();if(v.kata&&!names.some(k=>eqi(k.name,v.kata)))names.push({name:v.kata});
   return `<form id="noteForm" novalidate>`+shead(n?"Edit note":"New note")+`
     <fieldset style="border:none;margin:0;padding:0"><legend class="legend" style="padding:0 0 8px">What kind?</legend><div class="tiles">
@@ -703,8 +847,11 @@ function formSheet(f){
     <label class="field"><span>Title</span><input class="inp" name="title" value="${esc(v.title)}" maxlength="140" placeholder="A few words"></label>
     <label class="field"><span>Note</span><textarea class="inp" name="note" rows="5" placeholder="What did you learn or notice?">${esc(v.note)}</textarea></label>
     <label class="field"><span>Video link (optional)</span><input class="inp" type="url" name="video" value="${esc(v.video)}" placeholder="https://…" inputmode="url"></label>
-    <label class="swrow goalrow"><span class="star">${icon("goals")}</span><span class="grow">Mark as a goal<span class="swsub">Shows on the Goals tab, whatever the note type</span></span><input type="checkbox" name="goal" ${v.goal?"checked":""}></label>
-    <label class="swrow"><span class="grow">Pin to "Working on"</span><input type="checkbox" name="pinned" ${v.pinned?"checked":""}></label>
+    <h3 class="legend" style="margin:20px 0 0">Markers</h3>
+    <label class="mrow m-goal"><span class="mi">${icon("goals")}</span><span class="grow"><span class="nm">Goal</span><span class="swsub">Long-term, on the Goals tab</span></span><input type="checkbox" name="goal" ${v.goal?"checked":""}></label>
+    <label class="mrow m-work"><span class="mi">${icon("work")}</span><span class="grow"><span class="nm">Working on</span><span class="swsub">Top of Notes · ${wc} of ${WORK_MAX} used</span></span><input type="checkbox" name="pinned" ${v.pinned?"checked":""}></label>
+    <div class="fubox"><label class="mrow m-fu"><span class="mi">${icon("follow")}</span><span class="grow"><span class="nm">Follow up</span><span class="swsub">A question to ask or check, then mark answered</span></span><input type="checkbox" name="followUp" ${v.followUp&&!v.answered?"checked":""}></label>
+      <div class="who" role="radiogroup" aria-label="Who to ask">${ASKS.map(x=>`<label class="pillr"><input type="radio" name="ask" value="${x.k}" ${eqi(v.ask||"Sensei",x.k)?"checked":""}><span>${x.s}</span></label>`).join("")}</div></div>
     <div class="savebar"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn save">${I.check}${n?"Save changes":"Save note"}</button></div>
     <p class="kbd-hint"><b>Ctrl+S</b> saves · <b>Esc</b> cancels</p></form>`;
 }
@@ -713,7 +860,10 @@ function saveNote(form){
   const data={type:s("type")||"General",kata:s("kata"),date:keyDate(s("date")||todayKey()).getTime(),from:s("from")||"Me",
     title:s("title"),note:String(fd.get("note")||"").replace(/\s+$/,""),video:s("video"),pinned:!!fd.get("pinned"),goal:!!fd.get("goal")};
   if(!data.title&&!data.note.trim()){toast("Write a title or a note first.");return;}
-  const editing=sheet.id;
+  const editing=sheet.id,old=editing?S.notes.find(x=>x.id===editing):null;
+  if(data.pinned&&!(old&&old.pinned)&&workCount(editing)>=WORK_MAX){toast("Working on holds "+WORK_MAX+". Take one off first.");return;}
+  const fu=!!fd.get("followUp"),wasAnswered=!!(old&&old.followUp&&old.answered);
+  data.followUp=fu||wasAnswered;data.answered=!fu&&wasAnswered;data.ask=s("ask")||"Sensei";
   if(editing)store.update("notes",editing,data);else store.add("notes",Object.assign({added:Date.now(),done:false},data));
   closeSheet();toast(editing?"Changes saved":"Note saved");
 }
@@ -728,6 +878,50 @@ function remSheet(name){
   return `<form id="remForm">`+shead("Key reminders")+`<p class="sub" style="margin:0">${esc(name)} · one reminder per line</p>
     <label class="field"><span class="sr">Reminders</span><textarea class="inp" name="rem" rows="6" autofocus>${esc(info.reminders||"")}</textarea></label>
     <div class="btns"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></form>`;
+}
+function assignSheet(id){
+  const a=S.assignments.find(x=>x.id===id);if(!a)return shead("Assignment")+'<p class="sub">This assignment was removed.</p>';
+  const can=ROLE==="owner",st=parseSteps(a.steps),dn=st.filter(x=>x.done).length,late=isLate(a),src=a.noteId?S.notes.find(n=>n.id===a.noteId):null;
+  return shead("Assignment")+`<div class="atitle"><span class="ico big as-ico">${icon("assign")}</span><h3>${esc(a.title)}</h3></div>
+    <div class="afacts"><div class="fact"><small>Given</small><b>${a.given?esc(fmtDay(dayKey(a.given))):"Not set"}</b></div>
+      <div class="fact ${a.done?"":late?"late":a.due?"due":""}"><small>${a.done?"Done":"Due"}</small><b>${a.done?(a.doneOn?esc(fmtDay(dayKey(a.doneOn))):"Yes"):a.due?esc(fmtDay(dayKey(a.due)))+" · "+esc(relDue(a)):"No due date"}</b></div>
+      ${a.kata?`<button class="fact kata" data-act="open-kata" data-v="${esc(a.kata)}"><small>Kata</small><b>${esc(a.kata)} ›</b></button>`:""}</div>
+    ${st.length?`<div class="steps"><h2 class="h2" style="margin:4px 0">Steps · ${dn} of ${st.length}</h2>${st.map((x,i)=>`<button class="stp" data-act="step" data-id="${esc(a.id)}" data-v="${i}" aria-pressed="${x.done}" ${can?"":"disabled"}><span class="bx">${x.done?I.check:""}</span><span class="tx">${esc(x.text)}</span></button>`).join("")}</div>`:""}
+    ${a.note?`<div class="box" style="margin:12px 0 0"><h2>Notes</h2><div class="view-body" style="margin:0">${esc(a.note)}</div></div>`:""}
+    ${src?`<button class="opt" data-act="open-note" data-id="${esc(src.id)}"><span class="grow">Linked note · ${esc(noteTitle(src))}</span><span style="width:18px;height:18px">${I.right}</span></button>`:""}
+    ${can?`<div class="btns"><button class="btn ${a.done?"":"ok"}" data-act="as-done" data-id="${esc(a.id)}">${a.done?"Not done yet":I.check+"Mark as done"}</button></div>
+      <div class="btns" style="margin-top:10px"><button class="btn" data-act="edit-assign" data-id="${esc(a.id)}">Edit</button>
+      <button class="btn danger" data-act="del-assign" data-id="${esc(a.id)}" data-confirm="Tap again to delete">Delete</button></div>`:""}`;
+}
+function assignForm(f){
+  const a=f.id?S.assignments.find(x=>x.id===f.id):null,src=!a&&f.fromNote?S.notes.find(n=>n.id===f.fromNote):null;
+  const v=a||{title:src?noteTitle(src):"",kata:src?src.kata:(f.preKata||""),given:src?src.date:Date.now(),due:0,steps:"",note:"",noteId:src?src.id:""};
+  const names=kataNames();if(v.kata&&!names.some(k=>eqi(k.name,v.kata)))names.push({name:v.kata});
+  return `<form id="assignForm" novalidate>`+shead(a?"Edit assignment":"New assignment")+`
+    ${src?`<p class="sub" style="margin:0">From your note on ${esc(fmtDay(dayKey(src.date)))}. It stays linked.</p>`:""}
+    <label class="field"><span>What did Sensei ask for?</span><input class="inp" name="title" value="${esc(v.title)}" maxlength="140" placeholder="e.g. Film Heian Godan and send it in" ${a?"":"autofocus"}></label>
+    <label class="field"><span>Kata (optional)</span><select class="inp" name="kata"><option value="">None</option>
+      ${names.map(k=>`<option value="${esc(k.name)}" ${eqi(k.name,v.kata)?"selected":""}>${esc(k.name)}</option>`).join("")}</select></label>
+    <div class="row" style="gap:10px;align-items:stretch"><label class="field grow"><span>Given</span><input class="inp" type="date" name="given" value="${v.given?dayKey(v.given):todayKey()}"></label>
+      <label class="field grow"><span>Due</span><input class="inp" type="date" name="due" value="${v.due?dayKey(v.due):""}"></label></div>
+    <label class="field"><span>Steps (one per line, optional)</span><textarea class="inp" name="steps" rows="4" style="min-height:96px" placeholder="Moves 1 to 4&#10;Moves 5 to 8">${esc(parseSteps(v.steps).map(x=>x.text).join("\n"))}</textarea></label>
+    <label class="field"><span>Notes</span><textarea class="inp" name="note" rows="3" style="min-height:84px" placeholder="Anything Sensei said about it">${esc(v.note)}</textarea></label>
+    <input type="hidden" name="noteId" value="${esc(v.noteId||"")}">
+    <div class="savebar"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn save">${I.check}${a?"Save changes":"Save assignment"}</button></div>
+    <p class="kbd-hint"><b>Ctrl+S</b> saves · <b>Esc</b> cancels</p></form>`;
+}
+function saveAssign(form){
+  const fd=new FormData(form),s=k=>String(fd.get(k)||"").trim();
+  const title=s("title");if(!title){toast("Give the assignment a name first.");return;}
+  const old=sheet.id?S.assignments.find(x=>x.id===sheet.id):null,prev=parseSteps(old&&old.steps);
+  const steps=String(fd.get("steps")||"").split("\n").map(x=>x.trim()).filter(Boolean).map(text=>{
+    const i=prev.findIndex(p=>p.text===text),done=i>=0&&prev[i].done;if(i>=0)prev.splice(i,1);return{text,done};});
+  const data={title,kata:s("kata"),given:s("given")?keyDate(s("given")).getTime():Date.now(),due:s("due")?keyDate(s("due")).getTime():0,
+    steps:serSteps(steps),note:String(fd.get("note")||"").replace(/\s+$/,""),noteId:s("noteId")};
+  if(old)store.update("assignments",old.id,data);else store.add("assignments",Object.assign({added:Date.now(),done:false},data));
+  closeSheet();
+  if(old||tab==="assignments")toast(old?"Changes saved":"Assignment saved");
+  else toast("Assignment saved",{label:"View",fn:()=>{tab="assignments";asView="todo";LS.set("tab",tab);kataOpen=null;render();window.scrollTo(0,0);}});
 }
 function accountSheet(){
   const owner=ROLE==="owner";
@@ -748,7 +942,7 @@ function toast(msg,act){const el=$("#toast");tAct=act||null;el.innerHTML=`<span 
 function hideToast(){const el=$("#toast");if(el)el.hidden=true;tAct=null;}
 function armed(btn){if(btn.dataset.armed==="1")return true;const orig=btn.innerHTML;btn.dataset.armed="1";btn.textContent=btn.dataset.confirm;setTimeout(()=>{if(btn.isConnected){btn.dataset.armed="";btn.innerHTML=orig;}},3200);return false;}
 
-function onData(){if(auth!=="ok"||!ready)return;render();if(sheet&&sheet.type!=="form"&&sheet.type!=="rem"&&sheet.type!=="kiai")renderSheet();}
+function onData(){if(auth!=="ok"||!ready)return;render();if(sheet&&sheet.type!=="form"&&sheet.type!=="aform"&&sheet.type!=="rem"&&sheet.type!=="kiai")renderSheet();}
 
 /* ---------- taps ---------- */
 document.addEventListener("click",e=>{
@@ -765,11 +959,23 @@ document.addEventListener("click",e=>{
     case"account":openSheet({type:"account"});break;
     case"sync":flush();break;
     case"close":closeSheet();break;
-    case"new":openSheet({type:"form",preType:"",preGoal:tab==="goals",preKata:tab==="kata"&&kataOpen?kataOpen:""});break;
+    case"new":if(tab==="assignments")openSheet({type:"aform"});else openSheet({type:"form",preType:"",preGoal:tab==="goals",preKata:tab==="kata"&&kataOpen?kataOpen:""});break;
+    case"asview":asView=v;LS.set("asview",v);render();break;
+    case"open-assign":openSheet({type:"assign",id});break;
+    case"edit-assign":openSheet({type:"aform",id});break;
+    case"to-assign":openSheet({type:"aform",fromNote:id});break;
+    case"as-done":{const x=S.assignments.find(y=>y.id===id);if(!x)break;const now=!x.done;
+      store.update("assignments",id,{done:now,doneOn:now?Date.now():0});toast(now?"Assignment done. Nice work!":"Back on your to-do list");break;}
+    case"step":{const x=S.assignments.find(y=>y.id===id);if(!x)break;const st=parseSteps(x.steps),i=+v;if(!st[i])break;
+      st[i].done=!st[i].done;store.update("assignments",id,{steps:serSteps(st)});if(st.length&&st.every(y=>y.done)&&!x.done)toast("All steps done. Mark the assignment done?",{label:"Done",fn:()=>store.update("assignments",id,{done:true,doneOn:Date.now()})});break;}
+    case"del-assign":{if(!armed(b))break;const x=S.assignments.find(y=>y.id===id);if(!x)break;const copy=Object.assign({},x);delete copy.id;
+      store.del("assignments",id);closeSheet();toast("Assignment deleted",{label:"Undo",fn:()=>enqueue({op:"add",coll:"assignments",id,data:copy})});break;}
+    case"answer":{const n=S.notes.find(x=>x.id===id);if(!n)break;store.update("notes",id,{followUp:true,answered:!n.answered});toast(n.answered?"Answered. Off your Follow up list":"Back on Follow up");break;}
     case"new-kata-note":openSheet({type:"form",preType:"Kata",preKata:curKata()});break;
     case"open-note":openSheet({type:"note",id});break;
     case"edit-note":openSheet({type:"form",id});break;
-    case"pin":{const n=S.notes.find(x=>x.id===id);if(n){store.update("notes",id,{pinned:!n.pinned});toast(n.pinned?"Pinned to Working on":"Unpinned");}break;}
+    case"pin":{const n=S.notes.find(x=>x.id===id);if(!n)break;if(!n.pinned&&workCount(id)>=WORK_MAX){toast("Working on holds "+WORK_MAX+". Take one off first.");break;}
+      store.update("notes",id,{pinned:!n.pinned});toast(n.pinned?"Added to Working on":"Taken off Working on");break;}
     case"del-note":{if(!armed(b))break;const n=S.notes.find(x=>x.id===id);if(!n)break;const copy=Object.assign({},n);delete copy.id;
       store.del("notes",id);closeSheet();toast("Note deleted",{label:"Undo",fn:()=>enqueue({op:"add",coll:"notes",id,data:copy})});break;}
     case"goal-done":{const n=S.notes.find(x=>x.id===id);if(n)store.update("notes",id,{done:!n.done});if(n&&n.done)toast("Goal done. Nice work!");break;}
@@ -796,6 +1002,7 @@ document.addEventListener("click",e=>{
 document.addEventListener("submit",e=>{
   e.preventDefault();
   if(e.target.id==="noteForm")saveNote(e.target);
+  if(e.target.id==="assignForm")saveAssign(e.target);
   if(e.target.id==="kiaiForm"){
     const fd=new FormData(e.target),info=kataInfo(sheet.name)||{},n=info.kiais||0,old=kiaiNotes(info);
     const out=old.slice();for(let i=0;i<n;i++)out[i]=String(fd.get("k"+i)||"").replace(/\s+/g," ").trim();
@@ -810,10 +1017,11 @@ document.addEventListener("input",e=>{
 document.addEventListener("change",e=>{if(e.target.id==="pickMonth"&&e.target.value){dateF=e.target.value;closeSheet();render();}});
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"&&sheet){closeSheet();return;}
-  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){const f=$("#noteForm");if(f){e.preventDefault();f.requestSubmit();}return;}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){const f=$("#noteForm")||$("#assignForm");if(f){e.preventDefault();f.requestSubmit();}return;}
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test((e.target&&e.target.tagName)||"")||(e.target&&e.target.isContentEditable);
   if(typing||sheet||e.ctrlKey||e.metaKey||e.altKey||auth!=="ok"||!ready)return;
   if(e.key==="/"){const s=$("#q")||$("#kq");if(s){e.preventDefault();s.focus();}}
+  else if(e.key==="n"&&ROLE==="owner"&&tab==="assignments"){e.preventDefault();openSheet({type:"aform"});}
   else if(e.key==="n"&&ROLE==="owner"&&!(tab==="kata"&&!kataOpen)){e.preventDefault();openSheet({type:"form",preType:tab==="kata"&&kataOpen?"Kata":"",preGoal:tab==="goals",preKata:tab==="kata"&&kataOpen?kataOpen:""});}
 });
 /* Phone back button: keep one guard entry in history so Back steps out of the app's own screens
@@ -821,7 +1029,7 @@ document.addEventListener("keydown",e=>{
 let exitArmed=false,exitT;
 const guardBack=()=>{try{history.pushState({kc:1},"");}catch(e){}};
 WIDE.addEventListener("change",()=>{if(!wide()&&sheet&&sheet.type==="kata"){kataOpen=sheet.name;sheet=null;$("#sheetWrap").hidden=true;}document.body.style.overflow=sheet&&!wide()?"hidden":"";if(sheet)renderSheet();else{$("#sheet").innerHTML=wide()?paneEmpty():"";}render();});
-["input","change"].forEach(ev=>document.addEventListener(ev,e=>{if(sheet&&sheet.type==="form"&&e.target.closest&&e.target.closest("#noteForm"))sheet.dirty=true;}));
+["input","change"].forEach(ev=>document.addEventListener(ev,e=>{if(sheet&&(sheet.type==="form"||sheet.type==="aform")&&e.target.closest&&e.target.closest("#noteForm,#assignForm"))sheet.dirty=true;}));
 window.addEventListener("popstate",()=>{
   if(exitArmed)return; // second Back on the home screen: let the app close
   if(sheet)closeSheet();

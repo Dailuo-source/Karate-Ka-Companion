@@ -10,7 +10,7 @@ fs.mkdirSync(OUT, { recursive: true });
 const SITE = 'https://karateka.test/';
 const API = 'https://script.google.com/macros/s/TEST/exec';
 const B = load({ owner: 'owner@example.com', tokens: { 'tok-owner': 'owner@example.com', 'tok-other': 'friend@example.com' } });
-const root = path.join(__dirname, '..');
+const root = path.join(__dirname, '..', 'web');
 
 async function phone(browser, token, vp) {
   const ctx = await browser.newContext({ viewport: vp || { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: false });

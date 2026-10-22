@@ -1,7 +1,7 @@
 # Karate-Ka Companion — Brief
 
 > **Claude: read this first.** Open only the files a change touches; use the code map to jump to a function.
-> `index.html` is ~57 KB: search for a function name (e.g. `grep -n "function render" index.html`) and read just that function.
+> `web/index.html` is ~57 KB: search for a function name (e.g. `grep -n "function render" web/index.html`) and read just that function.
 > At the end of a work session, update **Status** and add one line to **Changelog** (keep about 5).
 
 Gary's private karate notebook: dated notes (Kata / Kihon / Kumite / Sensei says / General) with markers (Goal, Working on, Follow up), a page per kata (feel, kiai count with a note per kiai, key reminders, its notes), a Goals tab and an Assignments tab. Samsung phone, Chrome PWA. No photos (Gary's choice).
@@ -10,7 +10,7 @@ Gary's private karate notebook: dated notes (Kata / Kihon / Kumite / Sensei says
 
 | Piece | Location |
 | --- | --- |
-| Live app | https://karate-ka-companion.pages.dev/ (Cloudflare Pages from `main`) |
+| Live app | https://karate-ka-companion.pages.dev/ (Cloudflare Pages from `main`, build output directory `web`, so only `web/` is published) |
 | Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, Assignments, My kata, Access |
 | Backend | Apps Script bound to the sheet; source is `Code.gs`. Web app version 6 (Execute as Gary, Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
@@ -41,11 +41,21 @@ Gary's private karate notebook: dated notes (Kata / Kihon / Kumite / Sensei says
 
 ## Changing things
 
-- App files: edit, bump `CACHE` in `sw.js`, commit and push to `main`.
+- App files: edit, bump `CACHE` in `web/sw.js`, commit and push to `main`.
 - Code.gs: paste into Apps Script, redeploy (Manage deployments → pencil → New version).
 - New sheet column: `applyOp_` adds a missing column on first write; or run `setup` (adds missing headers only), then redeploy.
-- Tests: `node test/backend.test.js` and `node test/e2e.js <shots dir>`.
+- Tests: `node test/backend.test.js` and `node test/e2e.js <shots dir>` (serves the page from `web/`).
 - Commits use author `Claude <noreply@anthropic.com>`.
+
+## Deploying Code.gs
+
+- Web app deployment ID: `AKfycbx0UcyEU5g-BdHWa9DfxAKFNYdbsZjDaGCLehJsaAWMk9ug1zVMlhDjFOGZdwQm4OdT`. Always update this deployment so the /exec URL never changes.
+- From this folder, `.clasp.json` points clasp at the script project (rootDir is the repo root, where `Code.gs` is):
+  ```
+  clasp push
+  clasp deploy -i AKfycbx0UcyEU5g-BdHWa9DfxAKFNYdbsZjDaGCLehJsaAWMk9ug1zVMlhDjFOGZdwQm4OdT -d "what changed"
+  ```
+- Never run `clasp deploy` without `-i`: that creates a new deployment with a new /exec URL. `clasp deployments` lists them.
 
 ## Code map
 API: op-batched like Pantry Pal, signed with a session token from Google sign-in.
@@ -53,7 +63,7 @@ API: op-batched like Pantry Pal, signed with a session token from Google sign-in
 | File | Lines | What's in it |
 |---|---|---|
 | `Code.gs` | 565 | `doGet`/`doPost`/`api`; privacy (`ownerEmail_`, `verifyIdToken_`, `newSession_`, `sessionEmail_`, `roleOf_`, `accessStatus_`, `requestAccess_`); data (`readAll_`, `applyOp_`, `kataList_`); menu (`onOpen`, `setup`, `setClientId`, `openApp`, `signOutAll`); `buildTab_` |
-| `index.html` | 706 | theme pre-load (~15), CSS (~16–200), markup (~202–205), one `<script>` (~206–704) |
+| `web/index.html` | 706 | theme pre-load (~15), CSS (~16–200), markup (~202–205), one `<script>` (~206–704) |
 | `test/` | | `backend.test.js`, `e2e.js`, `mock.js` |
 
 Inside the `index.html` script, search for:
@@ -73,6 +83,7 @@ Inside the `index.html` script, search for:
 - Open: publishing the OAuth app needs a home page and privacy link on the Branding page.
 
 ## Changelog (latest first, keep about 5 lines)
+- 2026-10-21: Moved the site files into `web/`; only that folder is published
 - 2026-10-22: Trimmed this brief
 - 2026-10-21: Assignments tab + sheet; Follow up marker; distinct markers. sw v9, web app v6
 - 2026-10-20: Kata in the side panel on desktop; belt sort. sw v8

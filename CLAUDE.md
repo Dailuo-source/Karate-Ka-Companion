@@ -4,14 +4,14 @@
 > `web/index.html` is ~57 KB: search for a function name (e.g. `grep -n "function render" web/index.html`) and read just that function.
 > At the end of a work session, update **Status** and add one line to **Changelog** (keep about 5).
 
-Gary's private karate notebook: dated notes (Kata / Kihon / Kumite / Sensei says / General) with markers (Goal, Working on, Follow up), a page per kata (feel, kiai count with a note per kiai, key reminders, its notes), a Goals tab and an Assignments tab. Samsung phone, Chrome PWA. No photos (Gary's choice).
+Gary's private karate notebook. Tabs (Nov 2026 redesign, sorted by how long he needs a thing): **Now** (home: what to work on next class), **Notes** (dated, list or calendar, monthly review), **Kata** (a page per kata: feel, kiais, key reminders, its notes), **Assignments** (only from Sensei), **Keep in mind** (long-term goals and lessons). Samsung phone, Chrome PWA. No photos (Gary's choice). Approved mockup: Design canvas "Karate-Ka Companion redesign" in the App Creation project.
 
 ## Where things live
 
 | Piece | Location |
 | --- | --- |
 | Live app | https://karate-ka-companion.pages.dev/ (Cloudflare Pages from `main`, build output directory `web`, so only `web/` is published) |
-| Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, Assignments, My kata, Access |
+| Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, Assignments, My kata, Access. Notes columns added Nov 2026: **Keep in mind**, **Month review (YYYY-MM)** |
 | Backend | Apps Script bound to the sheet; source is `Code.gs`. Web app version 6 (Execute as Gary, Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
 | Setup guide | `SETUP.md` |
@@ -27,8 +27,12 @@ Gary's private karate notebook: dated notes (Kata / Kihon / Kumite / Sensei says
 
 - Starts dark (`data-theme="dark"`); Light is a choice in the account panel (`kc.theme`). Midnight navy, periwinkle accent `#8C9BFF`, blush cheeks, one tint per note type (`--kata-f/--kata-i` etc.).
 - Kawaii icons `ICONS`; onigiri-in-a-headband `mascot()`. App icon is the onigiri on periwinkle.
-- Goals are a `goal` flag on any note, not a type (old "Goals" rows read as General + goal).
-- Markers: Goal = gold star, solid gold pill. Working on = coral flame, solid coral pill (`pinned`, max 3 via `WORK_MAX`, top of Notes). Follow up = sky bell, dashed outline (`followUp`, `ask` Sensei/Senpai/Myself, `answered`).
+- Notes are **point form only**: the Note column holds one point per line (`toPoints` also splits old prose by line and sentence for display/editing). A note can be on **several kata**: Kata column = "Bassai Dai, Bassai Sho" (`kataOf`, `hasKata`).
+- **Now** = `pinned` notes (tag *Practice*), open follow-ups (`followUp` && !`answered`, tag *Ask*, `ask` Sensei/Senpai/Myself) and assignments due within 14 days (tag *From Sensei*). No limit (WORK_MAX removed, Gary Nov 3). Rows expand (chevron) to show points; the small box on the right ticks them off (`now-done` → pinned false, `answer`, `as-done`). A practice item untouched for 35 days asks "Still on it?" (Yes / Move to Keep).
+- **Keep in mind** = goals (`goal`, box = reached → `done`) and lessons (`keep`, box = second nature → keep false). Lessons grouped by kata, then General.
+- Note form ends with **Where should this go?**: Just a note / Now (Practice or A question to ask) / Keep in mind (A lesson or A goal) / Assignment (saves, then opens the assignment form linked to the note).
+- **Month review** (Notes → "October review" button by each month): last month's takeaway, wins (goals reached, assignments done, questions answered), still working on, Sensei's points, notes by kata, and an editable takeaway saved as a Notes row with `review` = "YYYY-MM" (kept in `S.reviews`, never listed as a note). No counts or metrics (Gary's choice).
+- Phone: big action button fixed above the tab bar ("Write today's notes" / "New note" / "New assignment" / "Add to Keep in mind"); compact rows. The app always opens on Now.
 - Assignments: own tab and sheet tab; only Sensei gives them (no "given by"). Steps one per line, `[x] ` = done. Grouped Overdue / This week / Later / No due date; overdue count = red dot on the tab.
 - Note form: sticky Cancel + green **Save changes** ("Save note" when new). Ctrl+S saves, Esc cancels.
 - Wide (≥1000px): sidebar (sections, New note, Note types with counts, Settings), list fills the width, docked non-modal right panel (no scrim; × leaves "Pick a note"). Unsaved edit blocks switching. Kata open in the same panel; panels opened from a kata return to it. Keys: N new note, / search.
@@ -37,7 +41,7 @@ Gary's private karate notebook: dated notes (Kata / Kihon / Kumite / Sensei says
 - Press feedback: `.tapping` dip + `.tapped` ring (`replayTap`).
 - Sync: optimistic op queue, batched, 60 s polling.
 - `?kata=<name>` opens that kata's page.
-- Phone Back: one guard history entry; Back closes a panel, then the kata page, then returns to Notes; on Notes "Press back again to close".
+- Phone Back: one guard history entry; Back closes a panel, then the kata page, then returns to Now; on Now "Press back again to close".
 
 ## Changing things
 
@@ -62,32 +66,36 @@ API: op-batched like Pantry Pal, signed with a session token from Google sign-in
 
 | File | Lines | What's in it |
 |---|---|---|
-| `Code.gs` | 565 | `doGet`/`doPost`/`api`; privacy (`ownerEmail_`, `verifyIdToken_`, `newSession_`, `sessionEmail_`, `roleOf_`, `accessStatus_`, `requestAccess_`); data (`readAll_`, `applyOp_`, `kataList_`); menu (`onOpen`, `setup`, `setClientId`, `openApp`, `signOutAll`); `buildTab_` |
-| `web/index.html` | 706 | theme pre-load (~15), CSS (~16–200), markup (~202–205), one `<script>` (~206–704) |
+| `Code.gs` | 635 | `doGet`/`doPost`/`api`; privacy (`ownerEmail_`, `verifyIdToken_`, `newSession_`, `sessionEmail_`, `roleOf_`, `accessStatus_`, `requestAccess_`); data (`readAll_`, `applyOp_`, `kataList_`); menu (`onOpen`, `setup`, `setClientId`, `openApp`, `signOutAll`); `buildTab_` |
+| `web/index.html` | 1416 | theme pre-load (~15), CSS (~16–480), markup, one `<script>` |
 | `test/` | | `backend.test.js`, `e2e.js`, `mock.js` |
 
 Inside the `index.html` script, search for:
 - Sync and cache: `callApi`, `enqueue`, `flush`, `handle`, `normalize`, `saveCache`, `loadCache`, `boot`
 - Sign-in: `loadGis`, `initGis`, `drawGis`, `signIn`, `signOut`, `wipeLocal`, `authScreen`
-- Layout and theme: `render`, `header`, `nav`, `applyTheme`, `ICONS`, `mascot`
-- Notes: `viewNotes`, `notesList`, `noteCard`, `filtered`, `inDate`, `noteSheet`, `saveNote`, `dateSheet`
+- Layout and theme: `render`, `header`, `nav`, `actbar`, `applyTheme`, `ICONS`, `mascot`
+- Now: `viewNow`, `nowList`, `noteRowNow`, `xrow` (expandable row), `isStale`
+- Notes: `viewNotes`, `notesList`, `nrow`, `viewCal`, `filtered`, `inDate`, `noteSheet`, `formSheet`, `saveNote`, `addPoint`, `kataChips`, `dateSheet` (types + dates filter)
+- Keep in mind: `viewKeep`, `keepBody`
+- Month review: `reviewSheet`, `saveReview`, `reviewOf`
 - Kata: `upsertKata`, `kataNames`, `viewKataList`, `kataRows`, `kataPage`
-- Goals: `viewGoals`
-- Markers: `marks`, `MK`, `workCount`, `ASKS`, `askLbl`
-- Assignments: `viewAssignments`, `asCard`, `assignSheet`, `assignForm`, `saveAssign`, `parseSteps`, `dueLabel`
+- Tags and points: `TG`, `noteTags`, `toPoints`, `ptsHtml`, `ASKS`, `askLbl`
+- Assignments: `viewAssignments`, `asRow`, `assignSheet`, `assignForm`, `saveAssign`, `parseSteps`, `dueLabel`
 - Panels: `openSheet`, `renderSheet`, `formSheet`, `remSheet`, `accountSheet`, `toast`
 - Tap feedback: `tapKey`, `replayTap`
 
 ## Status
-- Working: live and in use; notes, kata pages, markers, goals, assignments, Google sign-in. Web app v6, sw v9.
+- Working: Nov 2026 redesign (Now / Notes / Kata / Assignments / Keep in mind, point-form notes, multi-kata, month review). sw v10.
+- Needs deploying: Code.gs (two new Notes columns). Until it's deployed, Keep in mind lessons and month takeaways won't save to the sheet.
+- Next: notifications (class days and time, before/after class, assignment due, key dates, month review), copied from Home-and-Hobby's push setup.
 - Open: publishing the OAuth app needs a home page and privacy link on the Branding page.
 
 ## Changelog (latest first, keep about 5 lines)
+- 2026-11-03: Redesign: Now home, Notes list + calendar, Keep in mind tab, expandable rows, point-form notes, multi-kata, month review. Keep + review columns. sw v10
 - 2026-10-21: Moved the site files into `web/`; only that folder is published
 - 2026-10-22: Trimmed this brief
 - 2026-10-21: Assignments tab + sheet; Follow up marker; distinct markers. sw v9, web app v6
 - 2026-10-20: Kata in the side panel on desktop; belt sort. sw v8
-- 2026-10-20: Desktop layout with docked note panel. sw v7
 
 ## Working efficiently
 - Find code with search first, then read only the relevant lines. Don't read index.html top to bottom.

@@ -2,8 +2,10 @@
  * Karate-Ka Companion — Google Sheets backend
  *
  * The Sheet is the database:
- *   Notes    — one row per note (dated), typed Kata / Kihon / Kumite / Sensei says / General; any note can be ticked
- *              as a Goal, Pinned (Working on) or Follow up (a question to ask Sensei, Senpai or yourself)
+ *   Notes    — one row per note (dated), typed Kata / Kihon / Kumite / Sensei says / General. The Note column holds
+ *              points, one per line. Kata can list several, separated by commas. Pinned = on Now (practice),
+ *              Follow up = on Now as a question, Keep in mind = a long-term lesson, Goal = a long-term goal.
+ *              Rows with "Month review" set (e.g. 2026-10) hold that month's takeaway.
  *   Assignments — tasks Sensei gave you: due date, steps (one per line, "[x] " = done), linked note
  *   My kata  — your own view of each kata: how it feels, how many kiais it has, key reminders
  *   Access   — other Google accounts that asked to see your notes. Set Status to Approved to let one in
@@ -48,6 +50,8 @@ const SCHEMA = {
       ['followUp', 'Follow up', 'bool', 85],
       ['ask', 'Ask who', 'ask', 90],
       ['answered', 'Answered', 'bool', 85],
+      ['keep', 'Keep in mind', 'bool', 95],
+      ['review', 'Month review (YYYY-MM)', 'text', 110],
       ['added', 'Added', 'datetime', 150],
       ['updated', 'Updated', 'datetime', 150],
     ],

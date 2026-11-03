@@ -14,6 +14,7 @@ Gary's private karate notebook. Tabs (Nov 2026 redesign, sorted by how long he n
 | Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, Assignments, My kata, Access. Notes columns added Nov 2026: **Keep in mind**, **Month review (YYYY-MM)** |
 | Backend | Apps Script bound to the sheet; source is `Code.gs`. Web app version 6 (Execute as Gary, Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
+| Notifications | Push sender: Cloudflare Pages Function `functions/push/[[path]].js` (copied from Home-and-Hobby; `/push/keys`, `/push/send`, stateless). Scheduler: Apps Script `pushTick` every 5 min, started by menu **Turn on notifications**. VAPID keys in Script properties `VAPID_PUBLIC`/`VAPID_PRIVATE`, `PUSH_ON`=1 when on; settings JSON in `NOTIFY`. Tabs **Devices** (phones, owner only) and **Sent** (log; its Tag stops repeats; never sent to the app) |
 | Setup guide | `SETUP.md` |
 
 ## Privacy (private to Gary's Google account)
@@ -32,6 +33,7 @@ Gary's private karate notebook. Tabs (Nov 2026 redesign, sorted by how long he n
 - **Keep in mind** = goals (`goal`, box = reached → `done`) and lessons (`keep`, box = second nature → keep false). Lessons grouped by kata, then General.
 - Note form ends with **Where should this go?**: Just a note / Now (Practice or A question to ask) / Keep in mind (A lesson or A goal) / Assignment (saves, then opens the assignment form linked to the note).
 - **Month review** (Notes → "October review" button by each month): last month's takeaway, wins (goals reached, assignments done, questions answered), still working on, Sensei's points, notes by kata, and an editable takeaway saved as a Notes row with `review` = "YYYY-MM" (kept in `S.reviews`, never listed as a note). No counts or metrics (Gary's choice).
+- **Notifications**: bell on Now (and in the sidebar / Account panel) → `notifySheet`: this phone (Turn on / Send test / Turn off), class days + start/end times, Before class (Now list), After class (write notes, skipped if a note exists that day), Assignment due (days before + time), Long-running Now items (weekly), Month in review (1st), quiet hours. Every change saves straight away (`saveNotify` → `notify` in the next request). Tapping a notification opens its screen (`openLink`: now · new · a:<id> · review:YYYY-MM).
 - Phone: big action button fixed above the tab bar ("Write today's notes" / "New note" / "New assignment" / "Add to Keep in mind"); compact rows. The app always opens on Now.
 - Assignments: own tab and sheet tab; only Sensei gives them (no "given by"). Steps one per line, `[x] ` = done. Grouped Overdue / This week / Later / No due date; overdue count = red dot on the tab.
 - Note form: sticky Cancel + green **Save changes** ("Save note" when new). Ctrl+S saves, Esc cancels.
@@ -66,9 +68,11 @@ API: op-batched like Pantry Pal, signed with a session token from Google sign-in
 
 | File | Lines | What's in it |
 |---|---|---|
-| `Code.gs` | 635 | `doGet`/`doPost`/`api`; privacy (`ownerEmail_`, `verifyIdToken_`, `newSession_`, `sessionEmail_`, `roleOf_`, `accessStatus_`, `requestAccess_`); data (`readAll_`, `applyOp_`, `kataList_`); menu (`onOpen`, `setup`, `setClientId`, `openApp`, `signOutAll`); `buildTab_` |
+| `Code.gs` | 880 | `doGet`/`doPost`/`api` (+ `notify` settings, `test`); notifications (`dueList_` pure and tested, `pushTick`, `deliver_`, `sendTest_`, `cleanNotify_`, `unquiet_`, `turnOnNotifications`/`turnOffNotifications`); privacy (`ownerEmail_`, `verifyIdToken_`, `newSession_`, `sessionEmail_`, `roleOf_`, `accessStatus_`, `requestAccess_`); data (`readAll_`, `applyOp_`, `kataList_`); menu (`onOpen`, `setup`, `setClientId`, `openApp`, `signOutAll`); `buildTab_` |
 | `web/index.html` | 1416 | theme pre-load (~15), CSS (~16–480), markup, one `<script>` |
-| `test/` | | `backend.test.js`, `e2e.js`, `mock.js` |
+| `functions/push/[[path]].js` | 130 | Web Push signing (VAPID ES256) and aes128gcm encryption |
+| `web/sw.js` | 60 | offline cache, `push`, `notificationclick` |
+| `test/` | | `backend.test.js` (incl. `dueList_`), `e2e.js`, `mock.js` |
 
 Inside the `index.html` script, search for:
 - Sync and cache: `callApi`, `enqueue`, `flush`, `handle`, `normalize`, `saveCache`, `loadCache`, `boot`
@@ -83,19 +87,19 @@ Inside the `index.html` script, search for:
 - Assignments: `viewAssignments`, `asRow`, `assignSheet`, `assignForm`, `saveAssign`, `parseSteps`, `dueLabel`
 - Panels: `openSheet`, `renderSheet`, `formSheet`, `remSheet`, `accountSheet`, `toast`
 - Tap feedback: `tapKey`, `replayTap`
+- Notifications: `notifySheet`, `setNotify`, `saveNotify`, `pushOn`/`pushOff`, `checkPushSub`, `pushStatus`, `openLink` (actions `bell`, `push-on`, `push-test`, `nday`)
 
 ## Status
 - Working: Nov 2026 redesign (Now / Notes / Kata / Assignments / Keep in mind, point-form notes, multi-kata, month review). sw v10.
-- Needs deploying: Code.gs (two new Notes columns). Until it's deployed, Keep in mind lessons and month takeaways won't save to the sheet.
-- Next: notifications (class days and time, before/after class, assignment due, key dates, month review), copied from Home-and-Hobby's push setup.
+- Notifications built (2026-11-03): push sender, scheduler, settings panel. Needs Code.gs deployed, then menu **Turn on notifications** once, then the bell on Now → Turn on (per phone). sw v11.
 - Open: publishing the OAuth app needs a home page and privacy link on the Branding page.
 
 ## Changelog (latest first, keep about 5 lines)
+- 2026-11-03: Notifications: before/after class, assignment due, long-running Now items, month review, quiet hours; functions/push; Devices + Sent tabs; sw v11
 - 2026-11-03: Redesign: Now home, Notes list + calendar, Keep in mind tab, expandable rows, point-form notes, multi-kata, month review. Keep + review columns. sw v10
 - 2026-10-21: Moved the site files into `web/`; only that folder is published
 - 2026-10-22: Trimmed this brief
 - 2026-10-21: Assignments tab + sheet; Follow up marker; distinct markers. sw v9, web app v6
-- 2026-10-20: Kata in the side panel on desktop; belt sort. sw v8
 
 ## Working efficiently
 - Find code with search first, then read only the relevant lines. Don't read index.html top to bottom.

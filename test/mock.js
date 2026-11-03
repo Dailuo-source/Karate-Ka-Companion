@@ -47,7 +47,8 @@ function load(opts) {
     [12, 'Heian Yondan', 'Peace/Tranquility the fourth', 'Solo', 'Blue'], [28, 'Bassai Dai', 'Great fortress scene', 'Solo', 'Brown'],
     [46, 'San Chin', 'Three battles', 'Solo', 'White'], [47, 'Goshin no Kata Shodan', 'Self-protection form the first', 'Multi-person', 'White'],
     [59, 'Sannin Tatakai', 'Three-person battle', 'Multi-person', 'Black'], [63, 'Bo Bassai Shodan', 'Long stick fortress scene the first', 'Weapon', 'Brown']];
-  const props = {}; const cache = {}; const mail = [];
+  const props = {}; const cache = {}; const mail = []; const pushes = []; const triggers = [];
+  const p2 = n => String(n).padStart(2, '0');
   const tokens = opts.tokens; // token -> email
   const ctx = {
     console, JSON, Date, Math, Object, String, Number, Array, Error, encodeURIComponent,
@@ -63,22 +64,28 @@ function load(opts) {
       computeDigest: (alg, s) => [...crypto.createHash('sha256').update(s).digest()],
       base64EncodeWebSafe: b => Buffer.from(b.map(x => x & 255)).toString('base64url'),
       DigestAlgorithm: { SHA_256: 'sha256' },
+      formatDate: (d, tz, f) => { const k = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()); return f === 'yyyy-MM-dd' ? k : k + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); },
     },
+    ScriptApp: { getProjectTriggers: () => triggers.slice(), deleteTrigger: t => triggers.splice(triggers.indexOf(t), 1),
+      newTrigger: fn => { const t = { getHandlerFunction: () => fn }; const c = { timeBased: () => c, everyMinutes: () => c, create: () => { triggers.push(t); return t; } }; return c; } },
     UrlFetchApp: {
-      fetch(url) {
+      fetch(url, o) {
+        if (/push\/keys$/.test(url)) return { getResponseCode: () => 200, getContentText: () => JSON.stringify({ publicKey: 'PUB', privateJwk: { kty: 'EC', d: 'x' } }) };
+        if (/push\/send$/.test(url)) { const b = JSON.parse(o.payload); pushes.push(...b.messages); return { getResponseCode: () => 200, getContentText: () => JSON.stringify({ ok: true, results: b.messages.map(m => ({ endpoint: m.endpoint, status: m.endpoint.includes('gone') ? 410 : 201 })) }) }; }
         const tok = decodeURIComponent(url.split('id_token=')[1]);
         const email = tokens[tok];
         return { getResponseCode: () => (email ? 200 : 400), getContentText: () => JSON.stringify({ aud: 'test-client.apps.googleusercontent.com', email, email_verified: 'true', exp: String(Math.floor(Date.now() / 1000) + 3600) }) };
       },
     },
-    Session: { getEffectiveUser: () => ({ getEmail: () => opts.owner }) },
+    Session: { getEffectiveUser: () => ({ getEmail: () => opts.owner }), getScriptTimeZone: () => 'America/Toronto' },
     MailApp: { sendEmail: m => mail.push(m) },
     HtmlService: {}, ContentService: {},
   };
   vm.createContext(ctx);
-  vm.runInContext(fs.readFileSync(__dirname + '/../Code.gs', 'utf8') + '\n;this.__api=api;this.__setup=setup;', ctx);
+  vm.runInContext(fs.readFileSync(__dirname + '/../Code.gs', 'utf8') + '\n;this.__api=api;this.__setup=setup;this.__due=dueList_;this.__tick=pushTick;this.__on=turnOnNotifications;this.__clean=cleanNotify_;', ctx);
   ctx.__setup();
   props.CLIENT_ID = 'test-client.apps.googleusercontent.com';
-  return { api: b => JSON.parse(JSON.stringify(ctx.__api(b))), setup: () => ctx.__setup(), main, props, mail };
+  return { api: b => JSON.parse(JSON.stringify(ctx.__api(b))), setup: () => ctx.__setup(), main, props, mail, pushes, triggers,
+    due: (...a) => JSON.parse(JSON.stringify(ctx.__due(...a))), tick: () => ctx.__tick(), turnOn: () => ctx.__on(), clean: n => JSON.parse(JSON.stringify(ctx.__clean(n))) };
 }
 module.exports = { load };

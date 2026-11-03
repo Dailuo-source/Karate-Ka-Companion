@@ -1,7 +1,7 @@
 // Karate-Ka Companion service worker: makes the app installable and lets it open with bad signal.
 // Your notes live in your Google Sheet; only the app's own files are cached here.
 // Bump the version when you change files so phones pick up the update.
-const CACHE = 'karateka-companion-v10';
+const CACHE = 'karateka-companion-v11';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './favicon-64.png'];
 
 self.addEventListener('install', (e) => {
@@ -27,4 +27,30 @@ self.addEventListener('fetch', (e) => {
       })
       .catch(() => caches.match(e.request, { ignoreSearch: true }).then((r) => r || caches.match('./index.html')))
   );
+});
+
+/* ---------- notifications ---------- */
+// The sheet sends these through the app's push sender (functions/push). Payload: { title, body, tag, link }
+// link: 'now' · 'new' (write today's notes) · 'a:<assignment id>' · 'review:YYYY-MM'
+self.addEventListener('push', (e) => {
+  let p = {};
+  try { p = e.data ? e.data.json() : {}; } catch (err) { p = { title: 'Karate-Ka Companion', body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(p.title || 'Karate-Ka Companion', {
+    body: p.body || '',
+    tag: p.tag || undefined,
+    icon: 'icon-192.png',
+    badge: 'favicon-64.png',
+    data: { link: p.link || 'now' },
+  }));
+});
+
+// Tapping a notification brings the app forward on the right screen.
+self.addEventListener('notificationclick', (e) => {
+  const link = (e.notification.data && e.notification.data.link) || 'now';
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+    const c = list.find((x) => new URL(x.url).origin === self.location.origin);
+    if (c) { c.postMessage({ open: link }); return c.focus(); }
+    return self.clients.openWindow('./#open=' + encodeURIComponent(link));
+  }));
 });

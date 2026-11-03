@@ -8,6 +8,7 @@
  *              Rows with "Month review" set (e.g. 2026-10) hold that month's takeaway.
  *   Assignments — tasks Sensei gave you: due date, steps (one per line, "[x] " = done), linked note
  *   My kata  — your own view of each kata: how it feels, how many kiais it has, key reminders
+ *   Devices, Sent — notifications: the phones that turned them on, and what was sent (see "Notifications")
  *   Access   — other Google accounts that asked to see your notes. Set Status to Approved to let one in
  *              (view only). Leave it Requested or set Denied to keep them out.
  *
@@ -85,6 +86,29 @@ const SCHEMA = {
       ['updated', 'Updated', 'datetime', 150],
     ],
   },
+  // Notifications: one row per phone that turned them on (owner only), and a log of what was sent
+  // (its Tag column stops the same reminder going out twice).
+  devices: {
+    sheet: 'Devices', key: 'endpoint',
+    cols: [
+      ['id', 'ID', 'id', 80],
+      ['label', 'Phone', 'text', 160],
+      ['endpoint', 'Push address', 'text', 300],
+      ['p256dh', 'Key', 'text', 120],
+      ['auth', 'Auth', 'text', 90],
+      ['added', 'Added', 'datetime', 150],
+    ],
+  },
+  sent: {
+    sheet: 'Sent', key: 'tag',
+    cols: [
+      ['id', 'ID', 'id', 80],
+      ['sent', 'Sent', 'text', 140],
+      ['title', 'Notification', 'text', 260],
+      ['body', 'Text', 'text', 320],
+      ['tag', 'Tag', 'text', 200],
+    ],
+  },
   access: {
     sheet: 'Access', key: 'email',
     cols: [
@@ -153,7 +177,7 @@ function api(body) {
   }
 
   const ops = req.ops || [];
-  if (ops.length && role !== 'owner') {
+  if ((ops.length || req.notify || req.test) && role !== 'owner') {
     return { ok: false, error: 'read_only', message: 'You can look, but only the owner can change notes.' };
   }
 
@@ -161,10 +185,17 @@ function api(body) {
   if (!lock.tryLock(20000)) return { ok: false, error: 'busy', message: 'The sheet is busy. Try again in a moment.' };
   try {
     ops.forEach(applyOp_);
+    if (req.notify && typeof req.notify === 'object') props.setProperty('NOTIFY', JSON.stringify(cleanNotify_(req.notify)));
+    const test = role === 'owner' && req.test ? sendTest_() : null;
     SpreadsheetApp.flush();
     const out = { ok: true, role: role, email: email, state: readAll_(role) };
     if (session) out.session = session;
-    if (role === 'owner') out.sheetUrl = ss_().getUrl();
+    if (role === 'owner') {
+      out.sheetUrl = ss_().getUrl();
+      out.push = { vapid: props.getProperty('VAPID_PUBLIC') || '', on: props.getProperty('PUSH_ON') === '1' };
+      out.notify = notifySettings_();
+      if (test) out.test = test;
+    }
     return out;
   } catch (err) {
     return { ok: false, error: 'server', message: String((err && err.message) || err) };
@@ -373,7 +404,8 @@ function readAll_(role) {
   const ss = ss_();
   const out = {};
   Object.keys(SCHEMA).forEach(function (coll) {
-    if (coll === 'access' && role !== 'owner') return;
+    if ((coll === 'access' || coll === 'devices') && role !== 'owner' && role !== 'internal') return;
+    if (coll === 'sent' && role !== 'internal') return;
     const sch = SCHEMA[coll];
     out[coll] = [];
     const sh = ss.getSheetByName(sch.sheet);
@@ -449,7 +481,12 @@ function applyOp_(op) {
     buildTab_(ss, sch);
     t = table_(sh, sch);
   }
-  const row = op.id ? t.rowOf[op.id] : null;
+  let row = op.id ? t.rowOf[op.id] : null;
+  if (!row && op.coll === 'devices' && op.op === 'add' && op.data && op.data.endpoint && t.cols.endpoint != null && sh.getLastRow() >= 2) {
+    const eps = sh.getRange(2, t.cols.endpoint + 1, sh.getLastRow() - 1, 1).getValues();
+    for (let i = 0; i < eps.length; i++) if (String(eps[i][0]) === op.data.endpoint) { row = i + 2; break; }
+    if (row) op = Object.assign({}, op, { op: 'update' });
+  }
 
   if (op.op === 'del') {
     if (row) sh.deleteRow(row);
@@ -490,6 +527,9 @@ function onOpen() {
     .addItem('Open the app', 'openApp')
     .addItem('Set Google sign-in client ID…', 'setClientId')
     .addItem('Set up / repair sheets', 'setup')
+    .addSeparator()
+    .addItem('Turn on notifications', 'turnOnNotifications')
+    .addItem('Turn off notifications', 'turnOffNotifications')
     .addSeparator()
     .addItem('Sign out every phone', 'signOutAll')
     .addToUi();
@@ -632,4 +672,255 @@ function buildTab_(ss, sch) {
   }
   sh.setConditionalFormatRules(rules);
   return sh;
+}
+
+/* ------------------------------------------------------------------ */
+/* Notifications                                                       */
+/* ------------------------------------------------------------------ */
+//
+// Same setup as Home and Hobby: every 5 minutes pushTick() works out what's due, logs it to the
+// Sent tab (its Tag stops repeats) and hands it to the app's own push sender on Cloudflare
+// (APP_SITE + 'push/send', functions/push in the repo), which signs, encrypts and delivers it.
+// Menu "Turn on notifications" makes the keys and starts the 5-minute check.
+//
+// Settings live in the Script property NOTIFY (the app's Notifications panel saves them):
+//   days    class days, 0 = Sunday            start / end   class time, 'HH:mm'
+//   before  {on, m}   minutes before class: your Now list and questions to ask
+//   after   {on, m}   minutes after class: "Write today's notes" (skipped if you already wrote one that day)
+//   due     {on, d, t} assignments: d days before the due date, at t
+//   stale   {on, dow, t} weekly: Now items untouched for 5 weeks
+//   month   {on, t}   on the 1st: last month's review is ready
+//   quiet   {on, from, to} nothing goes out in between; it waits until quiet hours end
+
+const PUSH_LOOKBACK_MIN = 6 * 60;  // catch up on anything missed in the last 6 hours
+const SENT_KEEP = 300;             // rows kept in the Sent tab
+const STALE_DAYS = 35;
+const DEFAULT_NOTIFY = {
+  days: [], start: '19:00', end: '20:30',
+  before: { on: true, m: 60 }, after: { on: true, m: 60 }, due: { on: true, d: 1, t: '08:00' },
+  stale: { on: false, dow: 0, t: '19:00' }, month: { on: true, t: '09:00' }, quiet: { on: true, from: '22:00', to: '07:00' },
+};
+
+function notifySettings_() {
+  let saved = {};
+  try { saved = JSON.parse(PropertiesService.getScriptProperties().getProperty('NOTIFY') || '{}') || {}; } catch (e) { saved = {}; }
+  return cleanNotify_(saved);
+}
+/** Keeps only known settings, with sane values. */
+function cleanNotify_(n) {
+  const D = DEFAULT_NOTIFY, t = function (v, d) { return mins_(v) == null ? d : String(v); };
+  const num = function (v, d, lo, hi) { v = Number(v); return isNaN(v) ? d : Math.max(lo, Math.min(hi, Math.round(v))); };
+  const part = function (k, f) { const x = (n && n[k]) || {}; return Object.assign({ on: x.on == null ? D[k].on : !!x.on }, f(x)); };
+  return {
+    days: ((n && n.days) || []).map(Number).filter(function (d) { return d >= 0 && d <= 6; }),
+    start: t(n && n.start, D.start), end: t(n && n.end, D.end),
+    before: part('before', function (x) { return { m: num(x.m, D.before.m, 0, 1440) }; }),
+    after: part('after', function (x) { return { m: num(x.m, D.after.m, 0, 1440) }; }),
+    due: part('due', function (x) { return { d: num(x.d, D.due.d, 0, 14), t: t(x.t, D.due.t) }; }),
+    stale: part('stale', function (x) { return { dow: num(x.dow, D.stale.dow, 0, 6), t: t(x.t, D.stale.t) }; }),
+    month: part('month', function (x) { return { t: t(x.t, D.month.t) }; }),
+    quiet: part('quiet', function (x) { return { from: t(x.from, D.quiet.from), to: t(x.to, D.quiet.to) }; }),
+  };
+}
+
+function pad2_(n) { return (n < 10 ? '0' : '') + n; }
+function keyAdd_(k, n) {
+  const p = String(k).split('-');
+  const d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n));
+  return d.getUTCFullYear() + '-' + pad2_(d.getUTCMonth() + 1) + '-' + pad2_(d.getUTCDate());
+}
+function keyDow_(k) { const p = String(k).split('-'); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay(); }
+/** "18:30", "6:30 PM", "6 pm" → minutes after midnight, or null. */
+function mins_(t) {
+  const m = /^(\d{1,2})(?::(\d{2}))?\s*([ap])?\.?\s*m?\.?$/i.exec(String(t || '').trim());
+  if (!m) return null;
+  let h = +m[1]; const mi = +(m[2] || 0);
+  if (m[3]) { const pm = /p/i.test(m[3]); if (h === 12) h = pm ? 12 : 0; else if (pm) h += 12; }
+  return h > 23 || mi > 59 ? null : h * 60 + mi;
+}
+function stamp_(k, m) {
+  while (m < 0) { k = keyAdd_(k, -1); m += 1440; }
+  while (m >= 1440) { k = keyAdd_(k, 1); m -= 1440; }
+  return k + ' ' + pad2_(Math.floor(m / 60)) + ':' + pad2_(m % 60);
+}
+function unquiet_(q, st) {
+  if (!q || !q.on) return st;
+  const from = mins_(q.from), to = mins_(q.to);
+  if (from == null || to == null || from === to) return st;
+  const k = st.slice(0, 10), m = mins_(st.slice(11));
+  if (from < to) return m >= from && m < to ? stamp_(k, to) : st;
+  if (m >= from) return stamp_(keyAdd_(k, 1), to);
+  if (m < to) return stamp_(k, to);
+  return st;
+}
+function inWords_(m) {
+  if (m === 0) return 'starting now';
+  if (m % 60 === 0) return 'in ' + (m / 60) + (m === 60 ? ' hour' : ' hours');
+  if (m > 60) return 'in ' + Math.floor(m / 60) + ' h ' + (m % 60) + ' min';
+  return 'in ' + m + ' min';
+}
+const ASK_WORDS_ = { Sensei: 'Ask Sensei', Senpai: 'Ask Senpai', Myself: 'Check' };
+const MONTHS_ = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/**
+ * Everything that should go out between fromStamp (exclusive) and nowStamp (inclusive),
+ * as 'yyyy-MM-dd HH:mm' in the sheet's time zone. keyOf(ms) turns a date into 'yyyy-MM-dd' there.
+ * Pure (no Apps Script services) so it can be tested on its own.
+ */
+function dueList_(all, cfg, nowStamp, fromStamp, sent, keyOf, nowMs) {
+  const out = [];
+  const today = nowStamp.slice(0, 10), yday = keyAdd_(today, -1);
+  function add(base, msg) {
+    const eff = unquiet_(cfg.quiet, base);
+    if (eff > fromStamp && eff <= nowStamp && !sent[msg.tag]) {
+      sent[msg.tag] = true;
+      out.push({ title: msg.title, body: msg.body || '', link: msg.link || '', tag: msg.tag });
+    }
+  }
+  const notes = (all.notes || []).filter(function (n) { return !n.review; });
+  const ask = function (n) { return n.followUp && !n.answered; };
+  const titleOf = function (n) { return n.title || String(n.note || '').split('\n')[0].slice(0, 60) || 'Untitled note'; };
+  const start = mins_(cfg.start), end = mins_(cfg.end);
+
+  [yday, today].forEach(function (k) {
+    const classDay = (cfg.days || []).indexOf(keyDow_(k)) >= 0;
+    // 1. Before class: what's on Now
+    if (classDay && cfg.before.on && start != null) {
+      const bits = [];
+      (all.assignments || []).filter(function (a) { return !a.done && a.due && keyOf(a.due) >= k && keyOf(a.due) <= keyAdd_(k, 14); })
+        .sort(function (a, b) { return a.due - b.due; })
+        .forEach(function (a) { bits.push((keyOf(a.due) === k ? 'Due today: ' : 'From Sensei: ') + a.title); });
+      notes.filter(function (n) { return n.pinned; }).forEach(function (n) { bits.push('Practice: ' + titleOf(n)); });
+      notes.filter(ask).forEach(function (n) { bits.push((ASK_WORDS_[n.ask] || 'Ask Sensei') + ': ' + titleOf(n)); });
+      add(stamp_(k, start - cfg.before.m), { tag: 'before:' + k, title: 'Karate ' + inWords_(cfg.before.m),
+        body: bits.length ? bits.slice(0, 5).join(' · ') + (bits.length > 5 ? ' · +' + (bits.length - 5) + ' more' : '') : 'Nothing on Now yet. Have a good class!', link: 'now' });
+    }
+    // 2. After class: write today's notes, unless there's already a note for that day
+    if (classDay && cfg.after.on && end != null && !notes.some(function (n) { return n.date && keyOf(n.date) === k; })) {
+      add(stamp_(k, end + cfg.after.m), { tag: 'after:' + k, title: 'Write today\'s notes', body: 'What did you work on in class?', link: 'new' });
+    }
+    // 4. Weekly: Now items nobody has touched for 5 weeks
+    if (cfg.stale.on && keyDow_(k) === cfg.stale.dow && mins_(cfg.stale.t) != null) {
+      const old = notes.filter(function (n) { return n.pinned && nowMs - Math.max(n.updated || 0, n.date || 0, n.added || 0) > STALE_DAYS * 864e5; });
+      if (old.length) add(stamp_(k, mins_(cfg.stale.t)), { tag: 'stale:' + k, title: 'Still working on ' + (old.length === 1 ? 'this?' : 'these?'),
+        body: old.slice(0, 4).map(titleOf).join(' · ') + (old.length > 4 ? ' · +' + (old.length - 4) + ' more' : ''), link: 'now' });
+    }
+    // 5. On the 1st: last month's review
+    if (cfg.month.on && k.slice(8) === '01' && mins_(cfg.month.t) != null) {
+      const prev = keyAdd_(k, -1).slice(0, 7);
+      add(stamp_(k, mins_(cfg.month.t)), { tag: 'month:' + prev, title: 'Your ' + MONTHS_[+prev.slice(5) - 1] + ' review is ready',
+        body: 'Wins, Sensei\'s points and your takeaway', link: 'review:' + prev });
+    }
+  });
+  // 3. Assignments: d days before the due date
+  if (cfg.due.on && mins_(cfg.due.t) != null) {
+    (all.assignments || []).forEach(function (a) {
+      if (a.done || !a.due) return;
+      const dk = keyOf(a.due), d = cfg.due.d;
+      const steps = String(a.steps || '').split('\n').filter(function (l) { return l.trim(); });
+      const done = steps.filter(function (l) { return /^\s*\[[xX]\]/.test(l); }).length;
+      add(stamp_(keyAdd_(dk, -d), mins_(cfg.due.t)), { tag: 'due:' + a.id + ':' + dk + ':' + d,
+        title: 'Assignment due ' + (d === 0 ? 'today' : d === 1 ? 'tomorrow' : 'in ' + d + ' days'),
+        body: a.title + (steps.length ? ' · ' + done + ' of ' + steps.length + ' steps done' : ''), link: 'a:' + a.id });
+    });
+  }
+  return out;
+}
+
+/** Runs every 5 minutes once notifications are turned on. */
+function pushTick() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return;
+  try {
+    const all = readAll_('internal');
+    const tz = Session.getScriptTimeZone();
+    const now = new Date();
+    const nowStamp = Utilities.formatDate(now, tz, 'yyyy-MM-dd HH:mm');
+    const fromStamp = Utilities.formatDate(new Date(now.getTime() - PUSH_LOOKBACK_MIN * 60000), tz, 'yyyy-MM-dd HH:mm');
+    const sent = {};
+    all.sent.forEach(function (r) { if (r.tag) sent[r.tag] = true; });
+    const keyOf = function (ms) { return Utilities.formatDate(new Date(ms), tz, 'yyyy-MM-dd'); };
+    const items = dueList_(all, notifySettings_(), nowStamp, fromStamp, sent, keyOf, now.getTime());
+    if (items.length) deliver_(items, all.devices, nowStamp);
+    pruneSent_();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** Logs each item to the Sent tab, then sends it to every phone that turned notifications on. */
+function deliver_(items, devices, nowStamp) {
+  items.forEach(function (it) {
+    applyOp_({ op: 'add', coll: 'sent', id: newId_(), data: { sent: nowStamp, title: it.title, body: it.body, tag: it.tag } });
+  });
+  const props = PropertiesService.getScriptProperties();
+  const pub = props.getProperty('VAPID_PUBLIC'), priv = props.getProperty('VAPID_PRIVATE');
+  const phones = (devices || []).filter(function (d) { return d.endpoint; });
+  if (!pub || !priv || !phones.length) return { sent: 0, phones: phones.length };
+  const messages = [];
+  items.forEach(function (it) {
+    phones.forEach(function (d) {
+      messages.push({ endpoint: d.endpoint, p256dh: d.p256dh, auth: d.auth, payload: { title: it.title, body: it.body, tag: it.tag, link: it.link } });
+    });
+  });
+  let res;
+  try {
+    const r = UrlFetchApp.fetch(APP_SITE + 'push/send', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      payload: JSON.stringify({ vapid: { publicKey: pub, privateJwk: JSON.parse(priv) }, subject: APP_SITE, messages: messages }),
+    });
+    res = JSON.parse(r.getContentText());
+  } catch (err) {
+    console.log('Push send failed: ' + err);
+    return { sent: 0, phones: phones.length, error: String(err) };
+  }
+  let ok = 0;
+  ((res && res.results) || []).forEach(function (x) {
+    if (x.status >= 200 && x.status < 300) ok++;
+    if (x.status === 404 || x.status === 410) {
+      // That phone turned notifications off or the app was removed
+      phones.filter(function (d) { return d.endpoint === x.endpoint; }).forEach(function (d) { applyOp_({ op: 'del', coll: 'devices', id: d.id }); });
+    }
+  });
+  return { sent: ok, phones: phones.length };
+}
+
+function sendTest_() {
+  const all = readAll_('owner');
+  const tz = Session.getScriptTimeZone();
+  const nowStamp = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm');
+  return deliver_([{ title: 'Notifications are working', body: 'This is a test from ' + APP_NAME, tag: 'test:' + Date.now(), link: 'now' }], all.devices, nowStamp);
+}
+
+function pruneSent_() {
+  const sh = ss_().getSheetByName(SCHEMA.sent.sheet);
+  if (!sh) return;
+  const extra = sh.getLastRow() - 1 - SENT_KEEP;
+  if (extra > 20) sh.deleteRows(2, extra);
+}
+
+/** Menu: makes the push keys, adds the Devices and Sent tabs, and starts the 5-minute check. */
+function turnOnNotifications() {
+  const props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('VAPID_PUBLIC') || !props.getProperty('VAPID_PRIVATE')) {
+    const r = UrlFetchApp.fetch(APP_SITE + 'push/keys', { muteHttpExceptions: true });
+    if (r.getResponseCode() !== 200) throw new Error('Could not reach ' + APP_SITE + 'push/keys (' + r.getResponseCode() + ')');
+    const k = JSON.parse(r.getContentText());
+    props.setProperty('VAPID_PUBLIC', k.publicKey);
+    props.setProperty('VAPID_PRIVATE', JSON.stringify(k.privateJwk));
+  }
+  const ss = ss_();
+  ['devices', 'sent'].forEach(function (c) { buildTab_(ss, SCHEMA[c]); });
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'pushTick') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('pushTick').timeBased().everyMinutes(5).create();
+  props.setProperty('PUSH_ON', '1');
+  const msg = 'Notifications are on. On your phone: open ' + APP_NAME + ', tap the bell on Now and turn them on for that phone.';
+  console.log(msg);
+  try { SpreadsheetApp.getUi().alert(msg); } catch (e) { /* run from the editor */ }
+}
+
+function turnOffNotifications() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'pushTick') ScriptApp.deleteTrigger(t); });
+  PropertiesService.getScriptProperties().deleteProperty('PUSH_ON');
+  try { SpreadsheetApp.getUi().alert('Notifications are off. Nothing will be sent until you turn them on again.'); } catch (e) { /* editor */ }
 }

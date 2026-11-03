@@ -508,6 +508,26 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.45;font-weight:600}
   .xr-main,.nrow,.dcard,.lrow{cursor:pointer}
   .nrow.active{outline:2px solid var(--accent);outline-offset:-2px}
 }
+
+/* notifications panel */
+.ncard{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--hero);color:var(--hero-ink)}
+.ncard b{display:block;font-size:15.5px;font-weight:900}.ncard small{display:block;font-size:12.5px;font-weight:700;color:var(--hero-muted)}
+.ndays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.ndays button{height:44px;border-radius:12px;background:var(--sunk);color:var(--muted);font-size:13px;font-weight:800}
+.ndays button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:900}
+.ntime,.nsel{height:40px;border:none;border-radius:12px;background:var(--sunk);color:var(--ink);font-size:14px;font-weight:800;padding:0 10px;color-scheme:inherit}
+.nrow2{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.nlist .nrow2:first-child{border-top:none}
+.nrow2 .ico{width:40px;height:40px;border-radius:12px}.nrow2 .ico svg{width:30px;height:30px}
+.nrow2 b{display:block;font-size:15px;font-weight:900}.nrow2 small{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-top:1px}
+.nctl2{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tgl{position:relative;flex-shrink:0;width:52px;height:32px;cursor:pointer}
+.tgl input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.tgl span{position:absolute;inset:0;border-radius:16px;background:var(--line);transition:background-color .15s}
+.tgl span::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:12px;background:var(--muted);transition:transform .15s,background-color .15s}
+.tgl input:checked+span{background:var(--accent)}
+.tgl input:checked+span::after{transform:translateX(20px);background:var(--accent-ink)}
+.tgl input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -598,7 +618,7 @@ const I={
 /* ---------- state ---------- */
 let API=LS.get("api","")||API_URL, CLIENT=LS.get("client","")||CLIENT_ID;
 let SESSION=LS.get("session",""), ROLE=LS.get("role",""), EMAIL=LS.get("email",""), THEME=LS.get("theme","dark");
-let S={notes:[],reviews:[],assignments:[],kata:[],access:[],kataList:[]};
+let S={notes:[],reviews:[],assignments:[],kata:[],access:[],devices:[],kataList:[]};
 let auth="signin", ready=false, noAccess={email:"",requested:false}, setupMsg="";
 let queue=[],inflight=false,flushT=0,retryT=0,lastSync=0,syncState="",sheetUrl=LS.get("sheet","");
 let kataSort=LS.get("ksort","adv")==="beg"?"beg":"adv"; // adv = most advanced belt first (Gary, Oct 20)
@@ -611,9 +631,10 @@ function readLinkParams(){
     const api=h.get("api"),cid=h.get("client");
     if(api&&/^https:\/\/script\.google\.com\//.test(api)){API=api;LS.set("api",api);}
     if(cid&&/\.apps\.googleusercontent\.com$/.test(cid)){CLIENT=cid;LS.set("client",cid);}
+    const op=h.get("open");if(op)OPEN_LINK=op;
     const k=new URLSearchParams(location.search).get("kata");
     if(k){tab="kata";kataOpen=k;}
-    if(api||cid||k)history.replaceState(null,"",location.pathname);
+    if(api||cid||k||op)history.replaceState(null,"",location.pathname);
   }catch(e){}
 }
 
@@ -629,6 +650,7 @@ function normalize(st){
       steps:String(r.steps==null?"":r.steps),note:String(r.note==null?"":r.note),noteId:str(r.noteId),done:!!r.done,doneOn:+r.doneOn||0,added:+r.added||0})),
     kata:(st.kata||[]).map(r=>Object.assign({},r,{kata:str(r.kata),status:STATUSES.find(s=>eqi(s,r.status))||"",kiais:r.kiais==null||r.kiais===""?null:+r.kiais,reminders:String(r.reminders==null?"":r.reminders),kiaiNotes:String(r.kiaiNotes==null?"":r.kiaiNotes)})),
     access:(st.access||[]).map(r=>Object.assign({},r,{email:str(r.email),status:str(r.status)||"Requested"})),
+    devices:(st.devices||[]).map(r=>Object.assign({},r,{endpoint:str(r.endpoint)})),
     kataList:Array.isArray(st.kataList)?st.kataList:[]
   };
 }
@@ -653,10 +675,11 @@ async function flush(){
   if(auth!=="ok"||!SESSION||!API)return;
   if(inflight){clearTimeout(flushT);flushT=setTimeout(flush,400);return;}
   clearTimeout(retryT);
-  const ops=queue.slice();inflight=true;setSync(ops.length?"saving":ready?"loading":"connecting");
+  const ops=queue.slice(),nf=pendingNotify,tst=wantTest;inflight=true;setSync(ops.length||nf?"saving":ready?"loading":"connecting");
   let res;
-  try{res=await callApi({session:SESSION,ops});}catch(e){res={ok:false,error:"network"};}
+  try{res=await callApi(Object.assign({session:SESSION,ops},nf?{notify:nf}:{},tst?{test:true}:{}));}catch(e){res={ok:false,error:"network"};}
   inflight=false;
+  if(res&&res.ok){if(pendingNotify===nf)pendingNotify=null;if(tst)wantTest=false;}
   handle(res,ops.length);
 }
 function handle(res,n){
@@ -665,9 +688,12 @@ function handle(res,n){
     if(res.session){SESSION=res.session;LS.set("session",SESSION);}
     ROLE=res.role;EMAIL=res.email||EMAIL;
     if(res.sheetUrl){sheetUrl=res.sheetUrl;LS.set("sheet",sheetUrl);}
+    if(res.push)PUSH=res.push;if(res.notify&&!pendingNotify)NOTIFY=res.notify;
+    if(res.test)setTimeout(()=>toast(res.test.sent?"Test sent. It should pop up in a moment.":"The test couldn't reach this phone. Try Turn off, then Turn on again."),300);
     S=normalize(res.state);queue.forEach(applyLocal);saveCache();
     const was=auth;auth="ok";const first=!ready;ready=true;lastSync=Date.now();setSync("ok");
     if(first||was!=="ok")render();else onData();
+    if(first&&OPEN_LINK)openLink(OPEN_LINK);
     if(queue.length){clearTimeout(flushT);flushT=setTimeout(flush,350);}
     return;
   }
@@ -718,7 +744,7 @@ async function signIn(tok){
   signingIn=false;const sg=$("#signing");if(sg)sg.remove();
   handle(res,0);
 }
-function wipeLocal(){queue=[];S={notes:[],reviews:[],assignments:[],kata:[],access:[],kataList:[]};ready=false;["state","role","email","sheet"].forEach(LS.del);ROLE="";}
+function wipeLocal(){queue=[];S={notes:[],reviews:[],assignments:[],kata:[],access:[],devices:[],kataList:[]};NOTIFY=null;PUSH={vapid:"",on:false};ready=false;["state","role","email","sheet"].forEach(LS.del);ROLE="";}
 function signOut(msg){
   SESSION="";LS.del("session");wipeLocal();EMAIL="";auth="signin";LS.set("signedOut","1");closeSheet();
   try{if(window.google&&google.accounts)google.accounts.id.disableAutoSelect();}catch(e){}
@@ -829,10 +855,11 @@ function nowList(){
 /* ---------- screens ---------- */
 function header(title){
   const letter=esc((EMAIL||"?").charAt(0).toUpperCase());
-  const d=new Date().toLocaleDateString([],{weekday:"long",month:"short",day:"numeric"});
+  const d=new Date().toLocaleDateString([],{weekday:"short",month:"short",day:"numeric"});
   return `<header class="top">${tab==="now"?mascot("happy").replace('class="m"','width="38" height="38"'):""}
     <div class="ttl"><h1>${esc(title)}</h1><div class="date">${tab==="now"?esc(d)+" · ":""}<button class="sub sync" id="sync" data-act="sync"></button></div></div>
     ${tab==="notes"||tab==="keep"?`<button class="ibtn" data-act="search" aria-label="Search">${I.search}</button>`:""}
+    ${tab==="now"&&ROLE==="owner"?`<button class="ibtn" data-act="bell" aria-label="Notifications">${BELL}</button>`:""}
     <button class="ibtn" data-act="account" aria-label="Account, theme and access"><span class="avatar">${letter}</span></button></header>`;
 }
 const TABS=[["now","Now",BOLT],["notes","Notes",I.notes],["kata","Kata",I.kata],["assignments","Assignments",I.clip],["keep","Keep <br>in mind",MARK]];
@@ -841,7 +868,7 @@ function nav(){
   const types=[{k:"All",c:"",s:"All notes"}].concat(TYPES).map(t=>{const n=t.k==="All"?S.notes.length:S.notes.filter(x=>x.type===t.k).length;
     return`<button class="ntype ${t.c?"t-"+t.c:"t-all"}" data-act="navtype" data-v="${esc(t.k)}" aria-pressed="${tab==="notes"&&typeF===t.k}"><span class="ico">${t.c?icon(t.c):I.notes}</span><span class="grow">${esc(t.s||t.k)}</span><span class="cnt">${n}</span></button>`;}).join("");
   const side=`<div class="nside">${ROLE==="owner"?`<button class="btn primary nnew" data-act="new">${I.plus}${tab==="assignments"?"New assignment":"New note"}</button>`:""}<div class="nhead">Note types</div>${types}</div>
-    <div class="nfoot"><button class="nset" data-act="account"><span class="nav-av">${letter}</span><span class="grow"><b>Settings</b><span class="sub">${esc(EMAIL)}</span></span></button></div>`;
+    <div class="nfoot">${ROLE==="owner"?`<button class="nset" data-act="bell" style="margin-bottom:8px;background:transparent"><span class="nav-av" style="background:var(--surface);color:var(--ink)"><span style="width:20px;height:20px;display:inline-flex">${BELL}</span></span><span class="grow"><b>Notifications</b><span class="sub">${PUSHSUB?"On for this device":"Off for this device"}</span></span></button>`:""}<button class="nset" data-act="account"><span class="nav-av">${letter}</span><span class="grow"><b>Settings</b><span class="sub">${esc(EMAIL)}</span></span></button></div>`;
   const late=S.assignments.filter(isLate).length;
   return `<nav class="nav" aria-label="Sections"><div class="nbrand">${mascot("happy").replace('class="m"','width="46" height="46" aria-hidden="true"')}<span>Karate-Ka<br>Companion</span></div><div class="in" role="tablist">${
     TABS.map(([k,l,ic])=>`<button class="tab" role="tab" data-act="tab" data-v="${k}" aria-selected="${tab===k}">${ic}<span class="lb">${l}</span>${k==="assignments"&&late?`<span class="dotn" aria-label="${late} overdue">${late}</span>`:""}</button>`).join("")}</div>${side}</nav>`;
@@ -1098,7 +1125,7 @@ function closeSheet(){const prev=sheet;
   if(prev&&prev.type==="kata")kataOpen=null;
   sheet=null;const w=$("#sheetWrap");if(w)w.hidden=true;document.body.style.overflow="";if(wide())$("#sheet").innerHTML=paneEmpty();markActive();if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
 function renderSheet(){if(!sheet)return;const b=$("#sheet");
-  b.innerHTML=sheet.type==="kata"?kataPage(sheet.name,true):sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):sheet.type==="kiai"?kiaiSheet(sheet.name):sheet.type==="assign"?assignSheet(sheet.id):sheet.type==="aform"?assignForm(sheet):sheet.type==="review"?reviewSheet(sheet.month):accountSheet();
+  b.innerHTML=sheet.type==="kata"?kataPage(sheet.name,true):sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):sheet.type==="kiai"?kiaiSheet(sheet.name):sheet.type==="assign"?assignSheet(sheet.id):sheet.type==="aform"?assignForm(sheet):sheet.type==="review"?reviewSheet(sheet.month):sheet.type==="notify"?notifySheet():accountSheet();
   b.setAttribute("aria-label",sheet.type==="form"?"Note":sheet.type==="aform"||sheet.type==="assign"?"Assignment":sheet.type);replayTap();}
 const shead=t=>`<div class="shead"><h2>${esc(t)}</h2><button type="button" class="ibtn close" data-act="close" aria-label="Close">${I.close}</button></div>`;
 
@@ -1239,7 +1266,7 @@ function saveAssign(form){
 function accountSheet(){
   const owner=ROLE==="owner";
   const acc=owner?S.access.slice().sort((a,b)=>(a.status==="Requested"?0:1)-(b.status==="Requested"?0:1)):[];
-  return shead("Account")+`<div class="acc"><span class="avatar" style="width:36px;text-align:center">${esc((EMAIL||"?").charAt(0).toUpperCase())}</span><span class="em">${esc(EMAIL)}<br><span class="sub">${owner?"Owner · full access":"View only"}</span></span></div>
+  return shead("Account")+(owner?`<button class="opt" data-act="bell"><span style="width:22px;height:22px;display:inline-flex;margin-right:10px">${BELL}</span><span class="grow">Notifications</span><span style="width:18px;height:18px">${I.right}</span></button>`:"")+`<div class="acc"><span class="avatar" style="width:36px;text-align:center">${esc((EMAIL||"?").charAt(0).toUpperCase())}</span><span class="em">${esc(EMAIL)}<br><span class="sub">${owner?"Owner · full access":"View only"}</span></span></div>
     <h2 class="h2" style="margin-top:18px">Look</h2><div class="seg" style="background:var(--surface)"><button data-act="theme" data-v="dark" aria-pressed="${THEME==="dark"}">Dark</button><button data-act="theme" data-v="light" aria-pressed="${THEME==="light"}">Light</button><span></span></div>
     ${owner?`<h2 class="h2" style="margin-top:18px">Access</h2>${acc.length?acc.map(a=>`<div class="acc"><span class="em">${esc(a.email)}<br><span class="sub">${esc(a.status)}</span></span>
       ${a.status!=="Approved"?`<button class="mini yes" data-act="access" data-id="${esc(a.id)}" data-v="Approved">Allow</button>`:""}
@@ -1249,13 +1276,92 @@ function accountSheet(){
       <button class="btn wide danger" data-act="signout">Sign out</button></div>`;
 }
 
+
+/* ---------- notifications (Nov 2026; same push setup as Home and Hobby) ----------
+   The sheet decides what's due every 5 minutes (Code.gs pushTick) and sends it through functions/push.
+   This phone subscribes with the sheet's VAPID key; settings are saved in the script (NOTIFY). */
+let PUSH={vapid:"",on:false},PUSHSUB=null,NOTIFY=null,pendingNotify=null,wantTest=false,notifyT=0,OPEN_LINK=null;
+const PUSH_OK=()=>"serviceWorker"in navigator&&"PushManager"in window&&"Notification"in window;
+const BELL=SVG('<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>');
+function b64uBytes(s){s=String(s).replace(/-/g,"+").replace(/_/g,"/");const b=atob(s+"=".repeat((4-s.length%4)%4));return Uint8Array.from(b,c=>c.charCodeAt(0));}
+function checkPushSub(){if(!PUSH_OK())return Promise.resolve(null);
+  return navigator.serviceWorker.ready.then(r=>r.pushManager.getSubscription()).then(s=>{PUSHSUB=s;return s;}).catch(()=>null);}
+function deviceLabel(){const ua=navigator.userAgent||"";const m=ua.match(/Android[^;]*;\s*([^;)]+)/);return(m&&m[1]&&!/^K$/.test(m[1].trim())?m[1].trim():/Android/.test(ua)?"Android phone":/Windows/.test(ua)?"Windows computer":/Mac/.test(ua)?"Mac":"This device");}
+async function pushOn(){
+  if(!PUSH_OK()){toast("This browser can't show notifications. Open the app from Chrome on your phone.");return;}
+  if(!PUSH.vapid){toast("Turn notifications on in the sheet first: Karate-Ka Companion menu → Turn on notifications.");return;}
+  let perm=Notification.permission;
+  if(perm==="default")perm=await Notification.requestPermission();
+  if(perm!=="granted"){toast("Notifications are blocked. Allow them in Chrome: ⋮ → Settings → Site settings → Notifications.");if(sheet)renderSheet();return;}
+  try{const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uBytes(PUSH.vapid)});
+    PUSHSUB=sub;const j=sub.toJSON();
+    if(j.endpoint&&j.keys&&!(S.devices||[]).some(d=>d.endpoint===j.endpoint))store.add("devices",{endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,label:deviceLabel()});
+    wantTest=true;clearTimeout(flushT);flushT=setTimeout(flush,350);
+    toast("Notifications are on for this phone. A test is on its way.");}
+  catch(e){toast("Couldn't turn on notifications: "+((e&&e.message)||e));}
+  if(sheet)renderSheet();render();}
+async function pushOff(){try{const sub=PUSHSUB||await checkPushSub();if(sub){(S.devices||[]).filter(d=>d.endpoint===sub.endpoint).forEach(d=>store.del("devices",d.id));await sub.unsubscribe();}}catch(e){}
+  PUSHSUB=null;toast("Notifications are off for this phone");if(sheet)renderSheet();render();}
+function pushStatus(){if(!PUSH_OK())return"This browser can't show notifications";
+  if(PUSHSUB)return"On for this phone";
+  if(Notification.permission==="denied")return"Blocked in Chrome. Allow them in site settings.";
+  if(!PUSH.vapid)return"Not set up in the sheet yet";return"Off for this phone";}
+/* a tapped notification (or #open=… link): now · new · a:<assignment id> · review:YYYY-MM */
+function openLink(l){if(!l)return;OPEN_LINK=null;
+  if(l==="new"){tab="now";render();openSheet({type:"form"});return;}
+  if(l.indexOf("a:")===0){tab="assignments";render();openSheet({type:"assign",id:l.slice(2)});return;}
+  if(l.indexOf("review:")===0){tab="notes";render();openSheet({type:"review",month:l.slice(7)});return;}
+  closeSheet();tab="now";render();window.scrollTo(0,0);}
+if("serviceWorker"in navigator)navigator.serviceWorker.addEventListener("message",e=>{const m=e.data||{};
+  if(m.open!=null){if(auth==="ok"&&ready)openLink(m.open);else OPEN_LINK=m.open;}});
+
+function saveNotify(){pendingNotify=JSON.parse(JSON.stringify(NOTIFY));clearTimeout(notifyT);notifyT=setTimeout(flush,700);}
+const NDAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const to12=t=>{const m=/^(\d{1,2}):(\d{2})/.exec(t||"");if(!m)return t||"";const h=+m[1];return((h%12)||12)+":"+m[2]+" "+(h<12?"AM":"PM");};
+function nSel(path,opts,cur){return `<select class="nsel" data-n="${path}" aria-label="When">${opts.map(([v,l])=>`<option value="${v}" ${String(v)===String(cur)?"selected":""}>${esc(l)}</option>`).join("")}</select>`;}
+const nTime=(path,v,lbl)=>`<input class="ntime" type="time" data-n="${path}" value="${esc(v)}" aria-label="${esc(lbl)}" step="300">`;
+const nSw=(path,on,lbl)=>`<label class="tgl"><input type="checkbox" data-n="${path}" ${on?"checked":""} aria-label="${esc(lbl)}"><span aria-hidden="true"></span></label>`;
+function notifySheet(){
+  const N=NOTIFY;if(!N)return shead("Notifications")+'<p class="sub">Loading your settings…</p>';
+  const can=PUSH_OK(),on=!!PUSHSUB,blocked=can&&Notification.permission==="denied";
+  const row=(ic,tile,key,title,sub,ctl)=>`<div class="nrow2"><span class="ico" style="background:${tile}">${icon(ic)}</span>
+    <div class="grow" style="min-width:0"><b>${esc(title)}</b><small>${esc(sub)}</small><div class="nctl2">${ctl}</div></div>${nSw(key+".on",N[key].on,title)}</div>`;
+  return shead("Notifications")+`
+    <div class="ncard">${mascot("happy").replace('class="m"','width="40" height="40"')}<div class="grow"><b>${esc(pushStatus())}</b><small>${PUSH.vapid?"Each phone is turned on separately.":"In the sheet: Karate-Ka Companion menu → Turn on notifications."}</small></div>
+      ${on?`<button class="mini" data-act="push-test">Send test</button>`:can&&!blocked&&PUSH.vapid?`<button class="btn primary" style="height:44px" data-act="push-on">Turn on</button>`:""}</div>
+    ${on?`<button class="reached" data-act="push-off" style="margin-top:2px">Turn off for this phone</button>`:""}
+    <h2 class="h2" style="margin-top:16px">My class schedule</h2>
+    <div class="box" style="margin:0">
+      <div class="sub" style="margin-bottom:8px">Days I train</div>
+      <div class="ndays" role="group" aria-label="Days I train">${NDAYS.map((d,i)=>`<button data-act="nday" data-v="${i}" aria-pressed="${N.days.includes(i)}">${d}</button>`).join("")}</div>
+      <div class="row" style="margin-top:12px"><span class="grow" style="font-weight:800">Class starts</span>${nTime("start",N.start,"Class starts")}</div>
+      <div class="row" style="margin-top:8px"><span class="grow" style="font-weight:800">Class ends</span>${nTime("end",N.end,"Class ends")}</div>
+    </div>
+    <h2 class="h2" style="margin-top:16px">Remind me</h2>
+    <div class="box nlist" style="margin:0;padding:2px 14px">
+      ${row("work","var(--work-t)","before","Before class","Your Now list, including questions to ask.",nSel("before.m",[[15,"15 min before"],[30,"30 min before"],[60,"1 hour before"],[90,"1½ hours before"],[120,"2 hours before"],[180,"3 hours before"]],N.before.m))}
+      ${row("kata","var(--kata-f)","after","After class","Write today's notes. Skipped if you already did.",nSel("after.m",[[0,"Right after class"],[30,"30 min after"],[60,"1 hour after"],[120,"2 hours after"],[180,"3 hours after"]],N.after.m))}
+      ${row("assign","var(--as-f)","due","Assignment due","From Sensei, before the due date.",nSel("due.d",[[0,"On the day"],[1,"Day before"],[2,"2 days before"],[3,"3 days before"],[7,"A week before"]],N.due.d)+nTime("due.t",N.due.t,"Time"))}
+      ${row("follow","var(--fu-f)","stale","Long-running Now items","When something has been on Now for 5 weeks.",nSel("stale.dow",NDAYS.map((d,i)=>[i,"Every "+["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][i]]),N.stale.dow)+nTime("stale.t",N.stale.t,"Time"))}
+      ${row("goals","var(--goal-f)","month","Month in review","On the 1st, when last month's review is ready.",nTime("month.t",N.month.t,"Time"))}
+    </div>
+    <div class="box" style="margin:14px 0 0"><div class="row"><div class="grow"><b style="display:block">Quiet hours</b><small class="sub">Nothing is sent between ${esc(to12(N.quiet.from))} and ${esc(to12(N.quiet.to))}.</small></div>${nSw("quiet.on",N.quiet.on,"Quiet hours")}</div>
+      ${N.quiet.on?`<div class="row" style="margin-top:10px;gap:8px"><span class="sub">From</span>${nTime("quiet.from",N.quiet.from,"Quiet from")}<span class="sub">to</span>${nTime("quiet.to",N.quiet.to,"Quiet until")}</div>`:""}</div>
+    ${N.days.length?"":`<p class="sub" style="margin-top:12px">Pick your class days so Before and After class know when to remind you.</p>`}`;
+}
+function setNotify(path,val){const p=path.split(".");let o=NOTIFY;for(let i=0;i<p.length-1;i++)o=o[p[i]];o[p[p.length-1]]=val;saveNotify();}
+document.addEventListener("change",e=>{const el=e.target;if(!el.dataset||!el.dataset.n||!NOTIFY)return;
+  const path=el.dataset.n,v=el.type==="checkbox"?el.checked:/\.(m|d|dow)$/.test(path)?Number(el.value):el.value;
+  if(el.type==="time"&&!v)return;setNotify(path,v);if(el.type==="checkbox"||path.indexOf("quiet")===0)renderSheet();});
+
 /* ---------- toast ---------- */
 let tT=0,tAct=null;
 function toast(msg,act){const el=$("#toast");tAct=act||null;el.innerHTML=`<span class="grow">${esc(msg)}</span>${act?`<button data-act="toast">${esc(act.label)}</button>`:""}`;el.hidden=false;clearTimeout(tT);tT=setTimeout(hideToast,act?6000:2800);}
 function hideToast(){const el=$("#toast");if(el)el.hidden=true;tAct=null;}
 function armed(btn){if(btn.dataset.armed==="1")return true;const orig=btn.innerHTML;btn.dataset.armed="1";btn.textContent=btn.dataset.confirm;setTimeout(()=>{if(btn.isConnected){btn.dataset.armed="";btn.innerHTML=orig;}},3200);return false;}
 
-function onData(){if(auth!=="ok"||!ready)return;render();if(sheet&&sheet.type!=="review"&&sheet.type!=="form"&&sheet.type!=="aform"&&sheet.type!=="rem"&&sheet.type!=="kiai")renderSheet();}
+function onData(){if(auth!=="ok"||!ready)return;render();if(sheet&&sheet.type!=="review"&&sheet.type!=="notify"&&sheet.type!=="form"&&sheet.type!=="aform"&&sheet.type!=="rem"&&sheet.type!=="kiai")renderSheet();}
 
 /* ---------- taps ---------- */
 document.addEventListener("click",e=>{
@@ -1264,6 +1370,11 @@ document.addEventListener("click",e=>{
   const a=b.dataset.act,id=b.dataset.id,v=b.dataset.v;
   switch(a){
     case"tab":tab=v;LS.set("tab",v);searchOpen=false;q="";if(v!=="kata")kataOpen=null;render();window.scrollTo(0,0);break;
+    case"bell":openSheet({type:"notify"});checkPushSub().then(()=>{if(sheet&&sheet.type==="notify")renderSheet();});break;
+    case"push-on":pushOn();break;
+    case"push-off":pushOff();break;
+    case"push-test":wantTest=true;flush();toast("Sending a test…");break;
+    case"nday":if(NOTIFY){const d=+v,i=NOTIFY.days.indexOf(d);if(i>=0)NOTIFY.days.splice(i,1);else NOTIFY.days.push(d);NOTIFY.days.sort();saveNotify();renderSheet();}break;
     case"search":searchOpen=!searchOpen;if(!searchOpen)q="";render();if(searchOpen){const s2=$("#q");if(s2)s2.focus();}break;
     case"settype":typeF=v;closeSheet();render();break;
     case"nview":notesView=v;LS.set("nview",v);render();break;
@@ -1408,6 +1519,7 @@ function boot(){
   if(SESSION&&API){auth="ok";if(loadCache())ready=true;}
   render();
   if(auth==="ok")flush();
+  checkPushSub().then(()=>{if(auth==="ok"&&ready)render();});
 }
 boot();
 })();

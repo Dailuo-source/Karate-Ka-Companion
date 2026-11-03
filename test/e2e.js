@@ -218,6 +218,21 @@ const settle = page => page.waitForTimeout(700);
   await page.click('[data-act=theme][data-v=dark]');
   await page.click('[data-act=close]');
 
+  // notifications: bell on Now opens the settings; changes are saved in the script
+  B.turnOn();
+  await page.click('.tab[data-v=now]');
+  await page.click('[data-act=bell]');
+  await page.waitForSelector('.ndays');
+  await page.click('[data-act=nday][data-v="2"]');
+  await page.fill('input[data-n=start]', '18:30');
+  await page.selectOption('select[data-n="before.m"]', '30');
+  await page.click('.tgl:has(input[data-n="stale.on"])');
+  await page.waitForTimeout(1500); await settle(page);
+  await shot(page, '12-notifications');
+  const NF = JSON.parse(B.props.NOTIFY);
+  assert.deepEqual(NF.days, [2]); assert.equal(NF.start, '18:30'); assert.equal(NF.before.m, 30); assert.equal(NF.stale.on, true);
+  await page.click('#sheet .shead [data-act=close]');
+
   // the sheet really holds the data
   const st = B.api({ session: await page.evaluate(() => localStorage.getItem('kc.session')) });
   const N = t => st.state.notes.find(n => n.title === t);

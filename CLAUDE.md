@@ -2,7 +2,7 @@
 
 > **Claude: read this first.** Open only the files a change touches; use the code map to jump to a function.
 > `web/index.html` is ~57 KB: search for a function name (e.g. `grep -n "function render" web/index.html`) and read just that function.
-> At the end of a work session, update **Status** and add one line to **Changelog** (keep about 5).
+> At the end of a work session, update **Status** and add one line to **Changelog** (keep about 5). Keep **For Gary** current too: tick off (delete) what's done, add each step Gary must do himself (deploy, sheet menus, settings, checks). App Atlas reads Status, For Gary and Changelog to show where each app is.
 
 Gary's private karate notebook. Tabs (Nov 2026 redesign, sorted by how long he needs a thing): **Now** (home: what to work on next class), **Notes** (dated, list or calendar, monthly review), **Kata** (a page per kata: feel, kiais, key reminders, its notes), **Assignments** (only from Sensei), **Keep in mind** (long-term goals and lessons). Samsung phone, Chrome PWA. No photos (Gary's choice). Approved mockup: Design canvas "Karate-Ka Companion redesign" in the App Creation project.
 
@@ -93,6 +93,15 @@ Inside the `index.html` script, search for:
 - Working: Nov 2026 redesign (Now / Notes / Kata / Assignments / Keep in mind, point-form notes, multi-kata, month review). sw v10.
 - Notifications built (2026-11-03): push sender, scheduler, settings panel. Needs Code.gs deployed, then menu **Turn on notifications** once, then the bell on Now → Turn on (per phone). sw v11.
 - Open: publishing the OAuth app needs a home page and privacy link on the Branding page.
+
+## For Gary
+
+Steps only Gary can do (App Atlas shows these as his to-dos). One line each; delete a line once it's done.
+
+- [ ] Sheet menu: Karate-Ka Companion, Turn on notifications
+- [ ] In the app: bell on Now, Turn on (each phone)
+- [ ] Set your class days and times
+- [ ] Add a home page and privacy link on the Google sign-in Branding page
 
 ## Changelog (latest first, keep about 5 lines)
 - 2026-11-03: Notifications: before/after class, assignment due, long-running Now items, month review, quiet hours; functions/push; Devices + Sent tabs; sw v11

@@ -11,7 +11,7 @@ Gary's private karate notebook. Tabs (Nov 2026 redesign, sorted by how long he n
 | Piece | Location |
 | --- | --- |
 | Live app | https://karate-ka-companion.pages.dev/ (Cloudflare Pages from `main`, build output directory `web`, so only `web/` is published) |
-| Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, Assignments, My kata, Access. Notes columns added Nov 2026: **Keep in mind**, **Month review (YYYY-MM)** |
+| Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, Assignments, My kata, Access. Notes columns added Nov 2026: **Keep in mind**, **Month review (YYYY-MM)**. My kata columns added Nov 8: **Working on (shows on Now)**, **Kata notes (date | point, one per line)** |
 | Backend | Apps Script bound to the sheet; source is `Code.gs`. Web app version 6 (Execute as Gary, Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
 | Notifications | Push sender: Cloudflare Pages Function `functions/push/[[path]].js` (copied from Home-and-Hobby; `/push/keys`, `/push/send`, stateless). Scheduler: Apps Script `pushTick` every 5 min, started by menu **Turn on notifications**. VAPID keys in Script properties `VAPID_PUBLIC`/`VAPID_PRIVATE`, `PUSH_ON`=1 when on; settings JSON in `NOTIFY`. Tabs **Devices** (phones, owner only) and **Sent** (log; its Tag stops repeats; never sent to the app) |
@@ -39,6 +39,9 @@ Gary's private karate notebook. Tabs (Nov 2026 redesign, sorted by how long he n
 - Note form: sticky Cancel + green **Save changes** ("Save note" when new). Ctrl+S saves, Esc cancels.
 - Wide (≥1000px): sidebar (sections, New note, Note types with counts, Settings), list fills the width, docked non-modal right panel (no scrim; × leaves "Pick a note"). Unsaved edit blocks switching. Kata open in the same panel; panels opened from a kata return to it. Keys: N new note, / search.
 - Kata tab: Solo, Multi-person, Weapon, then belt most advanced first (flip saved as `kc.ksort`). Kata not on the dojo list show under "My other kata".
+- **Kata notes**: running dated points on the kata page ("Working notes" while working on it, "Kata notes" otherwise), stored in `kpts` on the My kata row, newest first. They stay forever; only Delete or Move to Key reminders removes one. Tap a point → `kpSheet` (edit text/date, move, delete).
+- **Working on this kata** switch (`working`) puts the kata on Now as a row (tag *Kata*) with its latest 4 points and an inline Add a point box; the box on the right takes it off Now (notes stay). Before-class push lists working kata first.
+- **Calendar** drop-down on Now (`nowCal`, starts closed): month grid, orange dot = kata notes, periwinkle dot = class notes; tap a day to list what was written.
 - Kiai: `My kata` column "Kiai notes (one per line, in order)"; line N = kiai N; extras past the count are kept but hidden. "Kiai details" starts collapsed every time.
 - Press feedback: `.tapping` dip + `.tapped` ring (`replayTap`).
 - Sync: optimistic op queue, batched, 60 s polling.
@@ -78,11 +81,12 @@ Inside the `index.html` script, search for:
 - Sync and cache: `callApi`, `enqueue`, `flush`, `handle`, `normalize`, `saveCache`, `loadCache`, `boot`
 - Sign-in: `loadGis`, `initGis`, `drawGis`, `signIn`, `signOut`, `wipeLocal`, `authScreen`
 - Layout and theme: `render`, `header`, `nav`, `actbar`, `applyTheme`, `ICONS`, `mascot`
-- Now: `viewNow`, `nowList`, `noteRowNow`, `xrow` (expandable row), `isStale`
+- Now: `viewNow`, `nowList`, `noteRowNow`, `xrow` (expandable row), `isStale`, `kataRowNow`, `nowCal` (actions `ncal`, `ncday`, `ncalm`)
 - Notes: `viewNotes`, `notesList`, `nrow`, `viewCal`, `filtered`, `inDate`, `noteSheet`, `formSheet`, `saveNote`, `addPoint`, `kataChips`, `dateSheet` (types + dates filter)
 - Keep in mind: `viewKeep`, `keepBody`
 - Month review: `reviewSheet`, `saveReview`, `reviewOf`
 - Kata: `upsertKata`, `kataNames`, `viewKataList`, `kataRows`, `kataPage`
+- Kata notes: `parseKP`, `joinKP`, `addKP`, `kpRows`, `kpAdd`, `kpSheet`, `kpChange` (actions `k-work`, `k-unwork`, `kp`, `kp-del`, `kp-rem`; form `.kpadd`, `#kpForm`)
 - Tags and points: `TG`, `noteTags`, `toPoints`, `ptsHtml`, `ASKS`, `askLbl`
 - Assignments: `viewAssignments`, `asRow`, `assignSheet`, `assignForm`, `saveAssign`, `parseSteps`, `dueLabel`
 - Panels: `openSheet`, `renderSheet`, `formSheet`, `remSheet`, `accountSheet`, `toast`
@@ -91,6 +95,7 @@ Inside the `index.html` script, search for:
 
 ## Status
 - Working: Nov 2026 redesign (Now / Notes / Kata / Assignments / Keep in mind, point-form notes, multi-kata, month review). sw v10.
+- Kata notes + Working on + Now calendar built (2026-11-08). Needs Code.gs deployed (new My kata columns) before they save. sw v12.
 - Notifications built (2026-11-03): push sender, scheduler, settings panel. Needs Code.gs deployed, then menu **Turn on notifications** once, then the bell on Now → Turn on (per phone). sw v11.
 - Open: publishing the OAuth app needs a home page and privacy link on the Branding page.
 
@@ -98,17 +103,18 @@ Inside the `index.html` script, search for:
 
 Steps only Gary can do (App Atlas shows these as his to-dos). One line each; delete a line once it's done.
 
+- [ ] Deploy Code.gs (clasp push + clasp deploy -i …) for kata notes and Working on
 - [ ] Sheet menu: Karate-Ka Companion, Turn on notifications
 - [ ] In the app: bell on Now, Turn on (each phone)
 - [ ] Set your class days and times
 - [ ] Add a home page and privacy link on the Google sign-in Branding page
 
 ## Changelog (latest first, keep about 5 lines)
+- 2026-11-08: Kata notes (dated points per kata, kept forever), Working on this kata switch → Now row with inline add, Calendar drop-down on Now. My kata columns working + kpts. sw v12
 - 2026-11-03: Notifications: before/after class, assignment due, long-running Now items, month review, quiet hours; functions/push; Devices + Sent tabs; sw v11
 - 2026-11-03: Redesign: Now home, Notes list + calendar, Keep in mind tab, expandable rows, point-form notes, multi-kata, month review. Keep + review columns. sw v10
 - 2026-10-21: Moved the site files into `web/`; only that folder is published
 - 2026-10-22: Trimmed this brief
-- 2026-10-21: Assignments tab + sheet; Follow up marker; distinct markers. sw v9, web app v6
 
 ## Working efficiently
 - Find code with search first, then read only the relevant lines. Don't read index.html top to bottom.

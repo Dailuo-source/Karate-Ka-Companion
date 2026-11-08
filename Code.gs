@@ -83,6 +83,8 @@ const SCHEMA = {
       ['kiais', 'Kiais', 'num', 60],
       ['reminders', 'Key reminders (one per line)', 'text', 320],
       ['kiaiNotes', 'Kiai notes (one per line, in order)', 'text', 260],
+      ['working', 'Working on (shows on Now)', 'bool', 90],
+      ['kpts', 'Kata notes (date | point, one per line)', 'text', 380],
       ['updated', 'Updated', 'datetime', 150],
     ],
   },
@@ -787,6 +789,7 @@ function dueList_(all, cfg, nowStamp, fromStamp, sent, keyOf, nowMs) {
     // 1. Before class: what's on Now
     if (classDay && cfg.before.on && start != null) {
       const bits = [];
+      (all.kata || []).filter(function (r) { return r.working; }).forEach(function (r) { bits.push('Kata: ' + r.kata); });
       (all.assignments || []).filter(function (a) { return !a.done && a.due && keyOf(a.due) >= k && keyOf(a.due) <= keyAdd_(k, 14); })
         .sort(function (a, b) { return a.due - b.due; })
         .forEach(function (a) { bits.push((keyOf(a.due) === k ? 'Due today: ' : 'From Sensei: ') + a.title); });

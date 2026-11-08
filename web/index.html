@@ -528,6 +528,43 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.45;font-weight:600}
 .tgl input:checked+span{background:var(--accent)}
 .tgl input:checked+span::after{transform:translateX(20px);background:var(--accent-ink)}
 .tgl input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+
+/* kata notes (Nov 8): a running, dated point list on each kata; "Working on this kata" puts it on Now */
+.tg-kata{background:var(--kata-f);color:var(--kata-i)}
+.kpl{margin-top:4px}
+.kp{display:flex;align-items:flex-start;gap:10px;width:100%;padding:9px 0;border-bottom:1px solid var(--line);text-align:left;font-size:15px;font-weight:700;line-height:1.35}
+.kp:last-child{border-bottom:none}
+.kp i{width:7px;height:7px;border-radius:4px;background:#FF9A6B;flex-shrink:0;margin-top:7px}
+.kp span{flex:1;min-width:0}
+.kp small{flex-shrink:0;font-size:12px;font-weight:800;color:var(--muted);margin-top:2px}
+.kpadd{display:flex;align-items:center;gap:8px;margin-top:8px;padding:4px 4px 4px 12px;border-radius:14px;background:var(--sunk);border:1.5px dashed var(--line)}
+.kpadd input{flex:1;min-width:0;height:40px;border:none;outline:none;background:none;font-size:15px;font-weight:700}
+.kpadd button{width:40px;height:40px;border-radius:12px;background:#FF9A6B;color:#2A1208;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kpadd button svg{width:18px;height:18px}
+.kwork{display:flex;align-items:center;gap:12px;margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--work-t)}
+.kwork .ico{width:32px;height:32px;background:transparent}.kwork .ico svg{width:30px;height:30px}
+.kwork b{display:block;font-size:15px;font-weight:900}.kwork small{display:block;font-size:12.5px;font-weight:700;color:var(--work-i)}
+.swb{position:relative;flex-shrink:0;width:52px;height:32px;border-radius:16px;background:var(--line)}
+.swb::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:12px;background:var(--muted);transition:transform .15s}
+.swb[aria-checked="true"]{background:#FF9A6B}.swb[aria-checked="true"]::after{transform:translateX(20px);background:#2A1208}
+.kbox{margin:12px 18px 0;padding:12px 14px;border-radius:20px;background:var(--surface);border:2px solid var(--work-t)}
+.kbox h2{margin:0;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--work-i)}
+.nowcal{margin:14px 14px 0;border-radius:20px;background:var(--surface)}
+.nowcal>button{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;text-align:left;border-radius:20px}
+.nowcal>button>.ci{width:22px;height:22px;color:var(--kata-i);display:inline-flex}
+.nowcal>button b{display:block;font-size:15px;font-weight:900}.nowcal>button small{display:block;font-size:12.5px;font-weight:700;color:var(--muted)}
+.nowcal .cin{padding:0 12px 12px}
+.nowcal .cday{height:42px;font-size:14px}
+.nowcal .cday .dots i.w{background:#FF9A6B}.nowcal .cday .dots i.c{background:var(--kata-i)}
+.nowcal .cday[aria-pressed="true"] .dots i{background:var(--accent-ink)}
+.nowcal .legend{display:flex;gap:14px;margin:10px 2px 0;font-size:12px;font-weight:800;color:var(--muted)}
+.nowcal .legend span{display:flex;align-items:center;gap:5px}.nowcal .legend i{width:8px;height:8px;border-radius:4px}
+.nowcal .dayp{margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--sunk)}
+.nowcal .dayp b.h{display:block;font-size:14.5px;font-weight:900;margin-bottom:2px}
+.dpi{display:flex;gap:8px;align-items:flex-start;width:100%;padding:6px 0;text-align:left;font-size:14.5px;font-weight:700}
+.dpi i{width:7px;height:7px;border-radius:4px;flex-shrink:0;margin-top:7px}
+.dpi span{flex:1;min-width:0}.dpi small{flex-shrink:0;font-size:11.5px;font-weight:800;margin-top:2px}
+@media (min-width:1000px){.nowcal{margin-left:0;margin-right:0}.kp,.dpi{cursor:pointer}}
 </style>
 </head>
 <body>
@@ -648,7 +685,7 @@ function normalize(st){
     notes:all.filter(n=>!n.review),reviews:all.filter(n=>n.review),
     assignments:(st.assignments||[]).map(r=>Object.assign({},r,{title:str(r.title),kata:str(r.kata),given:+r.given||0,due:+r.due||0,
       steps:String(r.steps==null?"":r.steps),note:String(r.note==null?"":r.note),noteId:str(r.noteId),done:!!r.done,doneOn:+r.doneOn||0,added:+r.added||0})),
-    kata:(st.kata||[]).map(r=>Object.assign({},r,{kata:str(r.kata),status:STATUSES.find(s=>eqi(s,r.status))||"",kiais:r.kiais==null||r.kiais===""?null:+r.kiais,reminders:String(r.reminders==null?"":r.reminders),kiaiNotes:String(r.kiaiNotes==null?"":r.kiaiNotes)})),
+    kata:(st.kata||[]).map(r=>Object.assign({},r,{kata:str(r.kata),status:STATUSES.find(s=>eqi(s,r.status))||"",kiais:r.kiais==null||r.kiais===""?null:+r.kiais,reminders:String(r.reminders==null?"":r.reminders),kiaiNotes:String(r.kiaiNotes==null?"":r.kiaiNotes),working:!!r.working,kpts:String(r.kpts==null?"":r.kpts)})),
     access:(st.access||[]).map(r=>Object.assign({},r,{email:str(r.email),status:str(r.status)||"Requested"})),
     devices:(st.devices||[]).map(r=>Object.assign({},r,{endpoint:str(r.endpoint)})),
     kataList:Array.isArray(st.kataList)?st.kataList:[]
@@ -787,7 +824,7 @@ function filtered(){
     .sort((a,b)=>sortNew?byDate(b,a):byDate(a,b));
 }
 
-/* ---------- screens ---------- */
+/* ---------- screens: redesign helpers ---------- */
 
 /* ---------- Nov 2026 redesign helpers ----------
    Now = what to work on next class: Practice (pinned notes), Ask (open follow-ups), From Sensei (assignments due within 2 weeks).
@@ -809,7 +846,7 @@ const TG={pr:'<span class="tg tg-pr">Practice</span>',ask:'<span class="tg tg-as
   keep:'<span class="tg tg-keep">Keep in mind</span>',goal:'<span class="tg tg-goal">Goal</span>',now:'<span class="tg tg-pr">On Now</span>'};
 const noteTags=n=>(isAsk(n)?TG.ask:n.pinned?TG.now:"")+(n.goal&&!n.done?TG.goal:n.keep?TG.keep:"");
 const kataLine=n=>kataOf(n).join(", ");
-let openRows=new Set(), notesView=LS.get("nview","list")==="cal"?"cal":"list", calMonth=todayKey().slice(0,7), calDay=null, keepF="all", showReached=false;
+let openRows=new Set(), notesView=LS.get("nview","list")==="cal"?"cal":"list", calMonth=todayKey().slice(0,7), calDay=null, calPick=false, keepF="all", showReached=false;
 const UP=SVG('<path d="M6 15l6-6 6 6"/>',2.6), CHART=SVG('<path d="M5 20V10M12 20V4M19 20v-7"/>',2.6);
 const BOLT=SVG('<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>'), MARK=SVG('<path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/>');
 const LIST=SVG('<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',2.4), FUNNEL=SVG('<path d="M4 5h16l-6 7v6l-4 2v-8z"/>');
@@ -853,6 +890,50 @@ function nowList(){
 }
 
 /* ---------- screens ---------- */
+
+/* ---------- kata notes (Nov 8) ----------
+   Each kata keeps its own dated points in My kata → "Kata notes" (one "YYYY-MM-DD | point" per line). They stay
+   forever unless deleted or moved to Key reminders. "Working on this kata" (working) puts the kata on Now. */
+const parseKP=s=>String(s||"").split("\n").map((l,i)=>{l=l.trim();const m=/^(\d{4}-\d{2}-\d{2})\s*\|\s*(.*)$/.exec(l);return m?{d:m[1],t:m[2].trim(),i}:{d:"",t:l,i};}).filter(p=>p.t);
+const joinKP=ps=>ps.map(p=>(p.d?p.d+" | ":"")+String(p.t).replace(/\s*\n\s*/g," ").trim()).join("\n");
+function addKP(name,text){text=String(text||"").replace(/\s+/g," ").trim();if(!text)return false;const info=kataInfo(name)||{};
+  const ps=parseKP(info.kpts);ps.push({d:todayKey(),t:text});upsertKata(name,{kpts:joinKP(ps)});return true;}
+function kpRows(name,limit){const ps=parseKP((kataInfo(name)||{}).kpts).reverse();const show=limit?ps.slice(0,limit):ps;
+  return show.map(p=>`<button class="kp" data-act="kp" data-v="${esc(name)}" data-id="${p.i}"><i aria-hidden="true"></i><span>${esc(p.t)}</span>${p.d?`<small>${esc(shortDate(keyDate(p.d).getTime()))}</small>`:""}</button>`).join("");}
+const kpId=name=>"kpa-"+String(name).replace(/\W+/g,"-");
+const kpAdd=name=>ROLE==="owner"?`<form class="kpadd" data-kata="${esc(name)}"><label class="sr" for="${kpId(name)}">Add a point to ${esc(name)}</label><input id="${kpId(name)}" name="kp" placeholder="Add a point…" maxlength="240" enterkeyhint="done" autocomplete="off"><button type="submit" aria-label="Add point">${I.plus}</button></form>`:"";
+function kataRowNow(r){const ps=parseKP(r.kpts);
+  return xrow({kind:"w",id:r.kata,top:'<span class="tg tg-kata">Kata</span>'+meta("Working on"+(r.status?" · "+r.status:"")),title:r.kata,empty:!ps.length,
+    body:`<div class="kpl">${kpRows(r.kata,4)}</div>${ps.length>4?`<p class="sub" style="margin:4px 0 0">+${ps.length-4} more on the kata page</p>`:""}${kpAdd(r.kata)}<div class="acts"><button class="mini" data-act="open-kata" data-v="${esc(r.kata)}">Open ${esc(r.kata)}</button></div>`,
+    boxAct:"k-unwork",bx:"var(--kata-i)",boxLabel:"Stop working on "+r.kata});}
+function kpSheet(name,i){const p=parseKP((kataInfo(name)||{}).kpts).find(x=>x.i===i);if(!p)return shead(name)+'<p class="sub">This point was removed.</p>';const can=ROLE==="owner";
+  return `<form id="kpForm">`+shead(name)+`<label class="field" style="margin-top:0"><span>Point</span><textarea class="inp" name="t" rows="3" style="min-height:84px" ${can?"":"disabled"}>${esc(p.t)}</textarea></label>
+    <label class="field"><span>Date</span><input class="inp" type="date" name="d" value="${esc(p.d||todayKey())}" ${can?"":"disabled"}></label>
+    ${can?`<div class="btns" style="margin-top:16px"><button type="button" class="btn" data-act="kp-rem">Move to Key reminders</button><button type="button" class="btn danger" data-act="kp-del" data-confirm="Tap again to delete">Delete</button></div>
+    <div class="savebar"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn save">${I.check}Save changes</button></div>`:""}</form>`;}
+function kpChange(fn){if(!sheet||sheet.type!=="kp")return;const info=kataInfo(sheet.name)||{};const ps=parseKP(info.kpts);const p=ps.find(x=>x.i===sheet.i);if(!p)return;
+  const out=fn(ps,p);if(out)upsertKata(sheet.name,out);}
+/* Now: calendar drop-down of every day you wrote something (kata notes + class notes) */
+let nowCalOpen=false,nowCalM=todayKey().slice(0,7),nowCalDay=null,nowCalPick=false;
+function nowCal(){
+  const items={};const put=(k,o)=>{(items[k]=items[k]||[]).push(o);};
+  S.kata.forEach(r=>parseKP(r.kpts).forEach(p=>{if(p.d)put(p.d,{w:1,t:p.t,kata:r.kata});}));
+  S.notes.forEach(n=>put(dayKey(n.date),{n}));
+  const m=nowCalM,first=keyDate(m+"-01"),startDow=first.getDay(),dim=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
+  if(!nowCalPick||!nowCalDay||nowCalDay.slice(0,7)!==m){nowCalPick=false;const ks=Object.keys(items).filter(k=>k.slice(0,7)===m).sort();nowCalDay=ks.includes(todayKey())?todayKey():ks[ks.length-1]||null;}
+  let cells=["S","M","T","W","T","F","S"].map(w=>`<span class="wd" aria-hidden="true">${w}</span>`).join("");
+  for(let i=0;i<startDow;i++)cells+=`<span aria-hidden="true"></span>`;
+  for(let d=1;d<=dim;d++){const k=m+"-"+pad(d),its=items[k]||[],w=its.some(x=>x.w),c=its.some(x=>x.n);
+    cells+=`<button class="cday ${its.length?"has":""} ${k===todayKey()?"today":""}" data-act="ncday" data-v="${k}" aria-pressed="${k===nowCalDay}" aria-label="${esc(fmtDay(k,true))}${its.length?", "+its.length+" entr"+(its.length===1?"y":"ies"):""}"><span>${d}</span><span class="dots">${w?'<i class="w"></i>':""}${c?'<i class="c"></i>':""}</span></button>`;}
+  const sel=nowCalDay?(items[nowCalDay]||[]):[];
+  const row=x=>x.w?`<button class="dpi" data-act="open-kata" data-v="${esc(x.kata)}"><i style="background:#FF9A6B"></i><span>${esc(x.t)}</span><small style="color:var(--work-i)">${esc(x.kata)}</small></button>`
+    :`<button class="dpi" data-act="open-note" data-id="${esc(x.n.id)}"><i style="background:var(--kata-i)"></i><span>${esc(noteTitle(x.n))}</span><small style="color:var(--kata-i)">${esc(typeOf(x.n.type).s)}</small></button>`;
+  return `<section class="nowcal"><button data-act="ncal" aria-expanded="${nowCalOpen}"><span class="ci">${I.cal}</span><span class="grow"><b>Calendar</b><small>${nowCalOpen?"Tap a day to see what you wrote":"See what you wrote each day"}</small></span><span class="xr-chev">${nowCalOpen?UP:I.down}</span></button>
+    ${nowCalOpen?`<div class="cin"><div class="cal" style="padding:0"><div class="mnav" style="padding:0 0 6px"><button class="ibtn" data-act="ncalm" data-v="-1" aria-label="Previous month">${I.back}</button><h2 style="font-size:16px">${esc(fmtMonth(m))}</h2><button class="ibtn" data-act="ncalm" data-v="1" aria-label="Next month">${I.right}</button></div>
+      <div class="cgrid">${cells}</div></div>
+      <div class="legend"><span><i style="background:#FF9A6B"></i>Kata notes</span><span><i style="background:var(--kata-i)"></i>Class notes</span></div>
+      ${nowCalDay?`<div class="dayp"><b class="h">${esc(fmtDay(nowCalDay,true))}</b>${sel.length?sel.map(row).join(""):'<p class="sub" style="margin:0">Nothing written this day.</p>'}</div>`:""}</div>`:""}</section>`;
+}
 function header(title){
   const letter=esc((EMAIL||"?").charAt(0).toUpperCase());
   const d=new Date().toLocaleDateString([],{weekday:"short",month:"short",day:"numeric"});
@@ -882,12 +963,13 @@ let searchOpen=false;
 const searchBox=(ph)=>searchOpen||q?`<div class="search">${I.search}<label for="q" class="sr">Search</label><input id="q" type="search" placeholder="${ph}" value="${esc(q)}" autocomplete="off"></div>`:"";
 
 function viewNow(){
-  const {as,ns}=nowList(),items=as.map(a=>asRow(a,true)).concat(ns.map(noteRowNow));
+  const {as,ns}=nowList(),items=S.kata.filter(r=>r.working).sort((a,b)=>a.kata.localeCompare(b.kata)).map(kataRowNow).concat(as.map(a=>asRow(a,true)),ns.map(noteRowNow));
   const days=[...new Set(S.notes.map(n=>dayKey(n.date)))].filter(k=>k<=todayKey()).sort().reverse();
   const last=days[0]?S.notes.filter(n=>dayKey(n.date)===days[0]).sort(byDate).slice(0,4):[];
   return `<div class="secx"><h2>What I'm working on</h2><span class="hint">${items.length?"Tap to expand · tick when done":""}</span></div>
     <div class="xl">${items.join("")||`<div class="empty" style="padding:20px">${mascot("happy")}Nothing on Now yet.</div>`}
     ${ROLE==="owner"?`<button class="addrow" data-act="new-now">${I.plus}Add something to work on</button>`:""}</div>
+    ${nowCal()}
     ${last.length?`<section class="lastc"><div class="secx"><h2>${days[0]===todayKey()?"Today":"Last class"} · ${esc(fmtDay(days[0]))}</h2><button class="mini" data-act="goto-day" data-v="${days[0]}">Open</button></div>
       ${last.map(n=>{const t=typeOf(n.type);return `<button class="lrow t-${t.c}" data-act="open-note" data-id="${esc(n.id)}"><span class="ico">${icon(t.c)}</span><span class="grow" style="min-width:0"><b>${esc(noteTitle(n))}</b><small>${esc(t.s)}${kataLine(n)&&noteTitle(n)!==kataLine(n)?" · "+esc(kataLine(n)):""}</small></span></button>`;}).join("")}</section>`:""}`;
 }
@@ -919,7 +1001,7 @@ function viewCal(){
   const m=calMonth,first=keyDate(m+"-01"),startDow=first.getDay(),dim=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
   const notes=filtered().filter(n=>dayKey(n.date).slice(0,7)===m),byDay={};notes.forEach(n=>{(byDay[dayKey(n.date)]=byDay[dayKey(n.date)]||[]).push(n);});
   const dueDays={};S.assignments.forEach(a=>{if(!a.done&&a.due)dueDays[dayKey(a.due)]=1;});
-  if(!calDay||calDay.slice(0,7)!==m){const ks=Object.keys(byDay).sort();calDay=ks.includes(todayKey())?todayKey():ks[ks.length-1]||null;}
+  if(!calPick||!calDay||calDay.slice(0,7)!==m){calPick=false;const ks=Object.keys(byDay).sort();calDay=ks.includes(todayKey())?todayKey():ks[ks.length-1]||null;}
   let cells="";for(let i=0;i<startDow;i++)cells+=`<span aria-hidden="true"></span>`;
   for(let d=1;d<=dim;d++){const k=m+"-"+pad(d),ns=byDay[k]||[],types=[...new Set(ns.map(n=>typeOf(n.type).c))].slice(0,3);
     cells+=`<button class="cday ${ns.length?"has":""} ${k===todayKey()?"today":""}" style="position:relative" data-act="cday" data-v="${k}" aria-pressed="${k===calDay}" aria-label="${esc(fmtDay(k,true))}${ns.length?", "+ns.length+" note"+(ns.length===1?"":"s"):""}${dueDays[k]?", assignment due":""}">
@@ -1104,11 +1186,14 @@ function kataPage(name,inPane){
       <div class="kiai">${KIAI}<div class="grow"><div class="sub">Kiais in this kata</div><div class="n">${k==null?"Not set":k}</div></div>
         ${can?`<button class="step" data-act="kiai" data-v="-1" aria-label="One less kiai" ${!k?"disabled":""}>−</button><button class="step plus" data-act="kiai" data-v="1" aria-label="One more kiai">+</button>`:""}</div>
       ${k?kiaiList(info,can):""}
+      <div class="kwork"><span class="ico">${icon("work")}</span><div class="grow" style="min-width:0"><b>Working on this kata</b><small>${info.working?"On Now until you take it off":"Turn on to keep it on Now"}</small></div>${can?`<button class="swb" role="switch" aria-checked="${!!info.working}" aria-label="Working on ${esc(name)}" data-act="k-work" data-v="${esc(name)}"></button>`:""}</div>
       <a href="${KATA_SITE}?kata=${encodeURIComponent(name)}" target="_blank" rel="noopener" style="font-size:14px;font-weight:800;color:var(--kata-i);display:flex;align-items:center;gap:6px;min-height:24px">Open in the dojo Kata Tracker<span style="width:16px;height:16px;display:inline-flex">${I.ext}</span></a>
     </section>
+    <section class="kbox"><div class="row" style="justify-content:space-between;align-items:baseline"><h2>${info.working?"Working notes":"Kata notes"}</h2>${can?'<span class="sub" style="font-size:12px">Tap a point to edit or move it</span>':""}</div>
+      <div class="kpl">${kpRows(name)||`<p class="sub" style="margin:6px 0 0">${can?"Add points as you work on this kata. They stay here, dated, until you delete them.":"None yet."}</p>`}</div>${kpAdd(name)}</section>
     <section class="box"><div class="row"><h2 class="grow" style="margin:0">Key reminders</h2>${can?`<button class="mini" data-act="edit-rem">Edit</button>`:""}</div>
       <div style="margin-top:8px">${rems.length?rems.map(r=>`<div class="rem"><i aria-hidden="true"></i>${esc(r)}</div>`).join(""):`<p class="sub" style="margin:0">${can?"Tap Edit to add the things you always want to remember.":"None yet."}</p>`}</div></section>
-    <div class="pad" style="margin-top:16px"><h2 class="h2">All notes on this kata</h2>
+    <div class="pad" style="margin-top:16px"><h2 class="h2">From your class notes</h2>
     ${notes.length?notes.map(n=>{const t=typeOf(n.type);return `<div class="tl t-${t.c}"><div class="rail"><span class="dot"></span><span class="line"></span></div>
       <button data-act="open-note" data-id="${esc(n.id)}"><span class="meta">${esc(fmtDay(dayKey(n.date)))}${n.from!=="Me"?`<span class="tag t-sensei">${esc(n.from)}</span>`:""}${n.type!=="Kata"?`<span class="tag">${esc(t.s)}</span>`:""}</span>
       <span class="ntitle" style="font-size:15px">${esc(noteTitle(n))}</span>${n.title&&n.note?`<span class="nsnip">${esc(toPoints(n.note).join(" · "))}</span>`:""}</button></div>`;}).join("")
@@ -1125,7 +1210,7 @@ function closeSheet(){const prev=sheet;
   if(prev&&prev.type==="kata")kataOpen=null;
   sheet=null;const w=$("#sheetWrap");if(w)w.hidden=true;document.body.style.overflow="";if(wide())$("#sheet").innerHTML=paneEmpty();markActive();if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
 function renderSheet(){if(!sheet)return;const b=$("#sheet");
-  b.innerHTML=sheet.type==="kata"?kataPage(sheet.name,true):sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):sheet.type==="kiai"?kiaiSheet(sheet.name):sheet.type==="assign"?assignSheet(sheet.id):sheet.type==="aform"?assignForm(sheet):sheet.type==="review"?reviewSheet(sheet.month):sheet.type==="notify"?notifySheet():accountSheet();
+  b.innerHTML=sheet.type==="kata"?kataPage(sheet.name,true):sheet.type==="note"?noteSheet(sheet.id):sheet.type==="form"?formSheet(sheet):sheet.type==="date"?dateSheet():sheet.type==="rem"?remSheet(sheet.name):sheet.type==="kiai"?kiaiSheet(sheet.name):sheet.type==="assign"?assignSheet(sheet.id):sheet.type==="aform"?assignForm(sheet):sheet.type==="review"?reviewSheet(sheet.month):sheet.type==="notify"?notifySheet():sheet.type==="kp"?kpSheet(sheet.name,sheet.i):accountSheet();
   b.setAttribute("aria-label",sheet.type==="form"?"Note":sheet.type==="aform"||sheet.type==="assign"?"Assignment":sheet.type);replayTap();}
 const shead=t=>`<div class="shead"><h2>${esc(t)}</h2><button type="button" class="ibtn close" data-act="close" aria-label="Close">${I.close}</button></div>`;
 
@@ -1361,7 +1446,7 @@ function toast(msg,act){const el=$("#toast");tAct=act||null;el.innerHTML=`<span 
 function hideToast(){const el=$("#toast");if(el)el.hidden=true;tAct=null;}
 function armed(btn){if(btn.dataset.armed==="1")return true;const orig=btn.innerHTML;btn.dataset.armed="1";btn.textContent=btn.dataset.confirm;setTimeout(()=>{if(btn.isConnected){btn.dataset.armed="";btn.innerHTML=orig;}},3200);return false;}
 
-function onData(){if(auth!=="ok"||!ready)return;render();if(sheet&&sheet.type!=="review"&&sheet.type!=="notify"&&sheet.type!=="form"&&sheet.type!=="aform"&&sheet.type!=="rem"&&sheet.type!=="kiai")renderSheet();}
+function onData(){if(auth!=="ok"||!ready)return;render();if(sheet&&sheet.type!=="review"&&sheet.type!=="notify"&&sheet.type!=="kp"&&sheet.type!=="form"&&sheet.type!=="aform"&&sheet.type!=="rem"&&sheet.type!=="kiai")renderSheet();}
 
 /* ---------- taps ---------- */
 document.addEventListener("click",e=>{
@@ -1378,9 +1463,9 @@ document.addEventListener("click",e=>{
     case"search":searchOpen=!searchOpen;if(!searchOpen)q="";render();if(searchOpen){const s2=$("#q");if(s2)s2.focus();}break;
     case"settype":typeF=v;closeSheet();render();break;
     case"nview":notesView=v;LS.set("nview",v);render();break;
-    case"cday":calDay=v;render();break;
+    case"cday":calDay=v;calPick=true;render();break;
     case"calm":{const d=keyDate(calMonth+"-01");d.setMonth(d.getMonth()+Number(v));calMonth=dayKey(d.getTime()).slice(0,7);calDay=null;render();break;}
-    case"goto-day":tab="notes";notesView="cal";calMonth=v.slice(0,7);calDay=v;typeF="All";dateF="all";render();window.scrollTo(0,0);break;
+    case"goto-day":tab="notes";notesView="cal";calMonth=v.slice(0,7);calDay=v;calPick=true;typeF="All";dateF="all";render();window.scrollTo(0,0);break;
     case"review":openSheet({type:"review",month:v});break;
     case"month-notes":tab="notes";notesView="list";dateF=v;closeSheet();render();window.scrollTo(0,0);break;
     case"xr":openRows.has(v)?openRows.delete(v):openRows.add(v);render();break;
@@ -1426,6 +1511,14 @@ document.addEventListener("click",e=>{
       if(!eqi(v,kataOpen))kiaiOpen=false;const wasKata=tab==="kata";tab="kata";LS.set("tab","kata");kataOpen=v;
       if(wide()){if(sheet)sheet.back=null;openSheet({type:"kata",name:v});render();if(!wasKata)window.scrollTo(0,0);}
       else{closeSheet();kataOpen=v;render();window.scrollTo(0,0);}break;}
+    case"k-work":{const info=kataInfo(v);const on=!(info&&info.working);upsertKata(v,{working:on});toast(on?v+" is on Now":v+" is off Now. Its notes stay on the kata page.");break;}
+    case"k-unwork":{upsertKata(id,{working:false});toast(id+" is off Now. Its notes stay on the kata page.",{label:"Undo",fn:()=>upsertKata(id,{working:true})});break;}
+    case"kp":openSheet({type:"kp",name:v,i:Number(id),back:wide()&&sheet&&sheet.type==="kata"?{type:"kata",name:sheet.name}:null});break;
+    case"kp-del":{if(!armed(b))break;kpChange((ps,p)=>({kpts:joinKP(ps.filter(x=>x!==p))}));closeSheet();toast("Point deleted");break;}
+    case"kp-rem":{const nm=sheet.name;kpChange((ps,p)=>{const info=kataInfo(nm)||{};const rems=String(info.reminders||"").split("\n").map(x=>x.trim()).filter(Boolean);rems.push(p.t);return{kpts:joinKP(ps.filter(x=>x!==p)),reminders:rems.join("\n")};});closeSheet();toast("Moved to Key reminders");break;}
+    case"ncal":nowCalOpen=!nowCalOpen;render();break;
+    case"ncday":nowCalDay=v;nowCalPick=true;render();break;
+    case"ncalm":{const d=keyDate(nowCalM+"-01");d.setMonth(d.getMonth()+Number(v));nowCalM=dayKey(d.getTime()).slice(0,7);nowCalDay=null;render();break;}
     case"kata-back":kataOpen=null;kiaiOpen=false;render();break;
     case"kstatus":{const nm=curKata();const info=kataInfo(nm);upsertKata(nm,{status:info&&info.status===v?"":v});break;}
     case"kiai":{const nm=curKata();const info=kataInfo(nm);const cur=info&&info.kiais!=null?info.kiais:0;upsertKata(nm,{kiais:Math.max(0,cur+Number(v))});break;}
@@ -1447,6 +1540,11 @@ document.addEventListener("submit",e=>{
   if(e.target.id==="noteForm")saveNote(e.target);
   if(e.target.id==="assignForm")saveAssign(e.target);
   if(e.target.id==="reviewForm")saveReview(e.target);
+  if(e.target.id==="kpForm"){const fd=new FormData(e.target),t=String(fd.get("t")||"").replace(/\s+/g," ").trim(),d=String(fd.get("d")||"");
+    if(!t){toast("Write the point first, or tap Delete.");return;}kpChange((ps,p)=>{p.t=t;if(/^\d{4}-\d{2}-\d{2}$/.test(d))p.d=d;return{kpts:joinKP(ps)};});sheet.dirty=false;closeSheet();toast("Point saved");}
+  if(e.target.classList&&e.target.classList.contains("kpadd")){const nm=e.target.dataset.kata,inp=e.target.querySelector("input");
+    if(addKP(nm,inp.value)){inp.value="";const f=document.getElementById(kpId(nm));if(f)f.focus();toast("Added to "+nm);}}
+
   if(e.target.id==="kiaiForm"){
     const fd=new FormData(e.target),info=kataInfo(sheet.name)||{},n=info.kiais||0,old=kiaiNotes(info);
     const out=old.slice();for(let i=0;i<n;i++)out[i]=String(fd.get("k"+i)||"").replace(/\s+/g," ").trim();

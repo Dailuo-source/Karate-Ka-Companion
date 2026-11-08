@@ -107,6 +107,11 @@ assert.equal(r.state.assignments[0].done, true);
 r = B.api({ session: S1, ops: [{ op: 'del', coll: 'assignments', id: 'a1' }] });
 assert.equal(r.state.assignments.length, 0);
 
+// kata notes and Working on live on the kata's row
+r = B.api({ session: S1, ops: [{ op: 'add', coll: 'kata', id: 'kw', data: { kata: 'Heian Nidan', working: true, kpts: '2026-11-08 | Hips first\n2026-11-08 | Eyes lead' } }] });
+const kw = r.state.kata.find(k => k.kata === 'Heian Nidan');
+assert.equal(kw.working, true); assert.equal(kw.kpts, '2026-11-08 | Hips first\n2026-11-08 | Eyes lead');
+
 // sessions are stored hashed, never as the token itself
 assert.ok(!Object.keys(B.props).some(k => k.includes(S1)));
 
@@ -125,9 +130,11 @@ const all = {
   ],
   assignments: [{ id: 'a9', title: 'Heian Godan bunkai', due: at('2026-11-04', '12:00'), steps: '[x] One\n[ ] Two', done: false }],
 };
+all.kata = [{ kata: 'Bassai Dai', working: true }, { kata: 'Tekki Shodan', working: false }];
 let out = B.due(all, cfg, '2026-11-03 18:00', '2026-11-03 17:55', {}, keyOf, at('2026-11-03', '18:00'));
 assert.equal(out.length, 1, JSON.stringify(out));
 assert.equal(out[0].title, 'Karate in 1 hour');
+assert.ok(out[0].body.startsWith('Kata: Bassai Dai · ') && !out[0].body.includes('Tekki'), out[0].body);
 assert.ok(out[0].body.includes('From Sensei: Heian Godan bunkai') && out[0].body.includes('Practice: Opening feels rushed') && out[0].body.includes('Ask Senpai: Kiai'), out[0].body);
 // after class (no note today), stale list on Tuesday, assignment due tomorrow at 8
 out = B.due(all, cfg, '2026-11-03 21:30', '2026-11-03 18:00', { 'before:2026-11-03': true }, keyOf, at('2026-11-03', '21:30'));

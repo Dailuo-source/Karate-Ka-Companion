@@ -1,8 +1,8 @@
 // Karate-Ka Companion service worker: makes the app installable and lets it open with bad signal.
 // Your notes live in your Google Sheet; only the app's own files are cached here.
 // Bump the version when you change files so phones pick up the update.
-const CACHE = 'karateka-companion-v12';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './favicon-64.png'];
+const CACHE = 'karateka-companion-v13';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './favicon-64.png', './badge-96.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))));
@@ -39,7 +39,7 @@ self.addEventListener('push', (e) => {
     body: p.body || '',
     tag: p.tag || undefined,
     icon: 'icon-192.png',
-    badge: 'favicon-64.png',
+    badge: 'badge-96.png',
     data: { link: p.link || 'now' },
   }));
 });

@@ -110,6 +110,7 @@ Steps only Gary can do (App Atlas shows these as his to-dos). One line each; del
 - [ ] Add a home page and privacy link on the Google sign-in Branding page
 
 ## Changelog (latest first, keep about 5 lines)
+- 2026-11-11: Notification status-bar icon: `web/badge-96.png` (white onigiri on transparent; Android draws badges as a one-colour silhouette, so the opaque favicon showed as a white/black square). sw v13
 - 2026-11-08: Kata notes (dated points per kata, kept forever), Working on this kata switch → Now row with inline add, Calendar drop-down on Now. My kata columns working + kpts. sw v12
 - 2026-11-03: Notifications: before/after class, assignment due, long-running Now items, month review, quiet hours; functions/push; Devices + Sent tabs; sw v11
 - 2026-11-03: Redesign: Now home, Notes list + calendar, Keep in mind tab, expandable rows, point-form notes, multi-kata, month review. Keep + review columns. sw v10

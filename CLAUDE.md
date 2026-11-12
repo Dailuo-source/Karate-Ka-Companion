@@ -109,7 +109,12 @@ Steps only Gary can do (App Atlas shows these as his to-dos). One line each; del
 - [ ] Set your class days and times
 - [ ] Add a home page and privacy link on the Google sign-in Branding page
 
+## Motion
+
+- **Motion pack** (`window.MP`, same copy in every app; Climb Buddy is the model): the `<script>` block before `</body>` in `web/index.html`, set up by the `MP.init({...})` line under it. Panels rise from the bottom and slip back down, toasts rise and slip away (setting `.hidden = true` plays the slip-away first, then hides; the app still reads `.hidden` as true at once), a new screen's pieces rise in one after another, and a new row on the same screen rises in. Unhurried (Gary wants animations easy to see); off under reduced motion. If a close function empties or removes the panel, do it after `MP.ms` (or use `MP.out(el, done)`), or the panel slides away empty.
+
 ## Changelog (latest first, keep about 5 lines)
+- 2026-11-12: Motion pack: panels and toasts rise and slip away, new screens rise in, new rows rise in. sw v15
 - 2026-11-12: Kata page matches the mockup: compact hero (feel + Working on only), small Class note button, green Key reminders, Kiais as one collapsed row below them (count stepper inside), dojo link at the bottom. sw v14
 - 2026-11-12: Deployed Code.gs (notifications, kata notes, Working on), web app v9
 - 2026-11-11: Notification status-bar icon: `web/badge-96.png` (white onigiri on transparent; Android draws badges as a one-colour silhouette, so the opaque favicon showed as a white/black square). sw v13

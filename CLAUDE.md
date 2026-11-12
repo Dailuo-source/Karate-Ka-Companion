@@ -42,7 +42,8 @@ Gary's private karate notebook. Tabs (Nov 2026 redesign, sorted by how long he n
 - **Kata notes**: running dated points on the kata page ("Working notes" while working on it, "Kata notes" otherwise), stored in `kpts` on the My kata row, newest first. They stay forever; only Delete or Move to Key reminders removes one. Tap a point → `kpSheet` (edit text/date, move, delete).
 - **Working on this kata** switch (`working`) puts the kata on Now as a row (tag *Kata*) with its latest 4 points and an inline Add a point box; the box on the right takes it off Now (notes stay). Before-class push lists working kata first.
 - **Calendar** drop-down on Now (`nowCal`, starts closed): month grid, orange dot = kata notes, periwinkle dot = class notes; tap a day to list what was written.
-- Kiai: `My kata` column "Kiai notes (one per line, in order)"; line N = kiai N; extras past the count are kept but hidden. "Kiai details" starts collapsed every time.
+- Kata page order (matches mockup): hero (name, feel, Working on switch) → Working/Kata notes → Key reminders (green) → Kiais row → From your class notes → dojo Kata Tracker link.
+- Kiai: `My kata` column "Kiai notes (one per line, in order)"; line N = kiai N; extras past the count are kept but hidden. The Kiais row (`kiaiList`, count stepper + details inside) starts collapsed every time.
 - Press feedback: `.tapping` dip + `.tapped` ring (`replayTap`).
 - Sync: optimistic op queue, batched, 60 s polling.
 - `?kata=<name>` opens that kata's page.
@@ -95,7 +96,7 @@ Inside the `index.html` script, search for:
 
 ## Status
 - Working: Nov 2026 redesign (Now / Notes / Kata / Assignments / Keep in mind, point-form notes, multi-kata, month review). sw v10.
-- Kata notes + Working on + Now calendar built (2026-11-08); Code.gs deployed (web app v9). sw v12.
+- Kata notes + Working on + Now calendar built (2026-11-08); Code.gs deployed (web app v9). Kata page restyled to the mockup 2026-11-12. sw v14.
 - Notifications built (2026-11-03): push sender, scheduler, settings panel. Code.gs deployed (web app v9); still needs menu **Turn on notifications** once, then the bell on Now → Turn on (per phone). sw v11.
 - Open: publishing the OAuth app needs a home page and privacy link on the Branding page.
 
@@ -109,12 +110,11 @@ Steps only Gary can do (App Atlas shows these as his to-dos). One line each; del
 - [ ] Add a home page and privacy link on the Google sign-in Branding page
 
 ## Changelog (latest first, keep about 5 lines)
+- 2026-11-12: Kata page matches the mockup: compact hero (feel + Working on only), small Class note button, green Key reminders, Kiais as one collapsed row below them (count stepper inside), dojo link at the bottom. sw v14
 - 2026-11-12: Deployed Code.gs (notifications, kata notes, Working on), web app v9
 - 2026-11-11: Notification status-bar icon: `web/badge-96.png` (white onigiri on transparent; Android draws badges as a one-colour silhouette, so the opaque favicon showed as a white/black square). sw v13
 - 2026-11-08: Kata notes (dated points per kata, kept forever), Working on this kata switch → Now row with inline add, Calendar drop-down on Now. My kata columns working + kpts. sw v12
 - 2026-11-03: Notifications: before/after class, assignment due, long-running Now items, month review, quiet hours; functions/push; Devices + Sent tabs; sw v11
-- 2026-11-03: Redesign: Now home, Notes list + calendar, Keep in mind tab, expandable rows, point-form notes, multi-kata, month review. Keep + review columns. sw v10
-- 2026-10-22: Trimmed this brief
 
 ## Working efficiently
 - Find code with search first, then read only the relevant lines. Don't read index.html top to bottom.

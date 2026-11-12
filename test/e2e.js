@@ -153,6 +153,8 @@ const settle = page => page.waitForTimeout(700);
   await page.click('[data-act=kata-back]');
   await page.click('.krow:has-text("Bassai Dai")');
   assert.equal(await page.locator('.tl:has-text("Opening feels rushed")').count(), 1);
+  assert.equal(await page.locator('[data-act=kiai]').count(), 0); // kiais start collapsed
+  await page.click('[data-act=kiai-toggle]');
   await page.click('[data-act=kiai][data-v="1"]');
   await page.click('[data-act=kiai][data-v="1"]');
   await page.click('[data-act=kstatus][data-v=Polishing]');

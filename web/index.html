@@ -147,7 +147,14 @@ button,.tile span,.pillr span{transition:transform .12s ease,filter .12s ease,ba
 .badge.s-Learning{background:var(--kihon-f);color:var(--kihon-i)}
 .badge.s-Polishing{background:var(--kata-f);color:var(--kata-i)}
 .badge.s-Solid{background:var(--sensei-f);color:var(--sensei-i)}
-.khero{margin:6px 18px 0;background:var(--kata-f);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.khero{margin:4px 14px 0;background:var(--kata-f);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.khero .kwork{margin-top:0}
+.box.krem{margin:12px 14px 0;padding:12px 14px}.box.krem h2{color:var(--ok);font-size:12px;letter-spacing:.08em}.krem .rem i{background:var(--ok)}
+.kcard{margin:12px 14px 0}.kcard .kdet-h{min-height:56px;gap:12px}
+.kcard .kdet-h b{display:block;font-size:15px;font-weight:900}.kcard .kdet-h small{display:block;font-size:12.5px;font-weight:700;color:var(--muted)}
+.kstar{width:26px;height:26px;display:inline-flex;flex:none}.kstar svg{width:26px;height:26px}
+.kcard .kiai{margin:0 10px 8px;background:var(--sunk)}
+.klink{margin:8px 0 20px}.klink a{font-size:13px;font-weight:800;color:var(--muted);display:inline-flex;align-items:center;gap:6px;min-height:44px}
 .khero h1{margin:0;font-size:26px;font-weight:900;line-height:1.1}
 .khero .en{font-size:14px;font-weight:700;color:var(--kata-i)}
 .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:var(--surface);border-radius:16px;padding:4px}
@@ -547,7 +554,7 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.45;font-weight:600}
 .swb{position:relative;flex-shrink:0;width:52px;height:32px;border-radius:16px;background:var(--line)}
 .swb::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:12px;background:var(--muted);transition:transform .15s}
 .swb[aria-checked="true"]{background:#FF9A6B}.swb[aria-checked="true"]::after{transform:translateX(20px);background:#2A1208}
-.kbox{margin:12px 18px 0;padding:12px 14px;border-radius:20px;background:var(--surface);border:2px solid var(--work-t)}
+.kbox{margin:12px 14px 0;padding:12px 14px;border-radius:20px;background:var(--surface);border:2px solid var(--work-t)}
 .kbox h2{margin:0;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--work-i)}
 .nowcal{margin:14px 14px 0;border-radius:20px;background:var(--surface)}
 .nowcal>button{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;text-align:left;border-radius:20px}
@@ -1159,12 +1166,14 @@ function kataRows(){
 }
 const kiaiNotes=info=>String((info&&info.kiaiNotes)||"").split("\n");
 function kiaiList(info,can){
-  const n=info.kiais,notes=kiaiNotes(info),filled=notes.slice(0,n).filter(x=>x.trim()).length;
-  return `<div class="kdet"><button class="kdet-h" data-act="kiai-toggle" aria-expanded="${kiaiOpen}" aria-controls="kdetBody">
-      <span class="grow">Kiai details</span><span class="kdet-c">${filled} of ${n} noted</span><span class="chev" aria-hidden="true">${I.down}</span></button>
-    ${kiaiOpen?`<div id="kdetBody"><ol class="klist">${Array.from({length:n},(_,i)=>{const t=(notes[i]||"").trim();
+  const n=info.kiais,notes=kiaiNotes(info),filled=n?notes.slice(0,n).filter(x=>x.trim()).length:0;
+  return `<div class="kdet kcard"><button class="kdet-h" data-act="kiai-toggle" aria-expanded="${kiaiOpen}" aria-controls="kdetBody"><span class="kstar">${KIAI}</span>
+      <span class="grow"><b>${n==null?"Kiais":"Kiais · "+n}</b><small>${kiaiOpen?"Tap to close":n?(filled+" of "+n+" noted · tap for kiai details"):"Tap to set how many"}</small></span><span class="chev" aria-hidden="true">${I.down}</span></button>
+    ${kiaiOpen?`<div id="kdetBody">${can?`<div class="kiai"><div class="grow"><div class="sub">Kiais in this kata</div><div class="n">${n==null?"Not set":n}</div></div>
+        <button class="step" data-act="kiai" data-v="-1" aria-label="One less kiai" ${!n?"disabled":""}>−</button><button class="step plus" data-act="kiai" data-v="1" aria-label="One more kiai">+</button></div>`:""}
+      ${n?`<ol class="klist">${Array.from({length:n},(_,i)=>{const t=(notes[i]||"").trim();
       return `<li><span class="kn">${i+1}</span><span class="${t?"":"sub"}">${t?esc(t):"No note yet"}</span></li>`;}).join("")}</ol>
-      ${can?`<button class="mini" data-act="edit-kiai">Edit kiai notes</button>`:""}</div>`:""}</div>`;
+      ${can?`<button class="mini" data-act="edit-kiai">Edit kiai notes</button>`:""}`:""}</div>`:""}</div>`;
 }
 function kiaiSheet(name){
   const info=kataInfo(name)||{},n=info.kiais||0,notes=kiaiNotes(info);
@@ -1174,30 +1183,28 @@ function kiaiSheet(name){
 }
 function kataPage(name,inPane){
   const info=kataInfo(name)||{},en=kataEn(name),can=ROLE==="owner";
-  const addBtn=can?`<button class="btn primary" data-act="new-kata-note" style="height:44px">${I.plus.replace("<svg",'<svg width="18" height="18"')}Add note</button>`:"";
+  const addBtn=can?`<button class="btn" data-act="new-kata-note" style="height:44px;padding:0 14px;font-size:14px">${I.plus.replace("<svg",'<svg width="16" height="16"')}Class note</button>`:"";
   const notes=S.notes.filter(n=>hasKata(n,name)).sort((a,b)=>byDate(b,a));
   const rems=String(info.reminders||"").split("\n").map(s=>s.trim()).filter(Boolean);
   const k=info.kiais;
   return `${inPane?`<div class="shead kpanehead"><span class="grow"></span>${addBtn}<button type="button" class="ibtn close" data-act="close" aria-label="Close ${esc(name)}">${I.close}</button></div>`
       :`<div class="backrow"><button class="ibtn" data-act="kata-back" aria-label="Back to kata list">${I.back}</button><span class="grow"></span>${addBtn}</div>`}
-    <section class="khero"><div class="row" style="gap:14px"><span style="width:64px;height:64px;color:var(--kata-i)">${icon("kata")}</span>
+    <section class="khero"><div class="row" style="gap:14px"><span style="width:52px;height:52px;flex:none;color:var(--kata-i)">${icon("kata")}</span>
       <div><h1>${esc(name)}</h1>${en?`<div class="en">${esc(en)}</div>`:""}</div></div>
       <div class="seg" role="group" aria-label="How it feels">${STATUSES.map(s=>`<button data-act="kstatus" data-v="${s}" aria-pressed="${info.status===s}" ${can?"":"disabled"}>${s}</button>`).join("")}</div>
-      <div class="kiai">${KIAI}<div class="grow"><div class="sub">Kiais in this kata</div><div class="n">${k==null?"Not set":k}</div></div>
-        ${can?`<button class="step" data-act="kiai" data-v="-1" aria-label="One less kiai" ${!k?"disabled":""}>−</button><button class="step plus" data-act="kiai" data-v="1" aria-label="One more kiai">+</button>`:""}</div>
-      ${k?kiaiList(info,can):""}
-      <div class="kwork"><span class="ico">${icon("work")}</span><div class="grow" style="min-width:0"><b>Working on this kata</b><small>${info.working?"On Now until you take it off":"Turn on to keep it on Now"}</small></div>${can?`<button class="swb" role="switch" aria-checked="${!!info.working}" aria-label="Working on ${esc(name)}" data-act="k-work" data-v="${esc(name)}"></button>`:""}</div>
-      <a href="${KATA_SITE}?kata=${encodeURIComponent(name)}" target="_blank" rel="noopener" style="font-size:14px;font-weight:800;color:var(--kata-i);display:flex;align-items:center;gap:6px;min-height:24px">Open in the dojo Kata Tracker<span style="width:16px;height:16px;display:inline-flex">${I.ext}</span></a>
+      <div class="kwork"><span class="ico">${icon("work")}</span><div class="grow" style="min-width:0"><b>Working on this kata</b><small>${info.working?"Shows on Now until you take it off":"Turn on to keep it on Now"}</small></div>${can?`<button class="swb" role="switch" aria-checked="${!!info.working}" aria-label="Working on ${esc(name)}" data-act="k-work" data-v="${esc(name)}"></button>`:""}</div>
     </section>
     <section class="kbox"><div class="row" style="justify-content:space-between;align-items:baseline"><h2>${info.working?"Working notes":"Kata notes"}</h2>${can?'<span class="sub" style="font-size:12px">Tap a point to edit or move it</span>':""}</div>
       <div class="kpl">${kpRows(name)||`<p class="sub" style="margin:6px 0 0">${can?"Add points as you work on this kata. They stay here, dated, until you delete them.":"None yet."}</p>`}</div>${kpAdd(name)}</section>
-    <section class="box"><div class="row"><h2 class="grow" style="margin:0">Key reminders</h2>${can?`<button class="mini" data-act="edit-rem">Edit</button>`:""}</div>
+    <section class="box krem"><div class="row"><h2 class="grow" style="margin:0">Key reminders</h2>${can?`<button class="mini" data-act="edit-rem">Edit</button>`:""}</div>
       <div style="margin-top:8px">${rems.length?rems.map(r=>`<div class="rem"><i aria-hidden="true"></i>${esc(r)}</div>`).join(""):`<p class="sub" style="margin:0">${can?"Tap Edit to add the things you always want to remember.":"None yet."}</p>`}</div></section>
+    ${kiaiList(info,can)}
     <div class="pad" style="margin-top:16px"><h2 class="h2">From your class notes</h2>
     ${notes.length?notes.map(n=>{const t=typeOf(n.type);return `<div class="tl t-${t.c}"><div class="rail"><span class="dot"></span><span class="line"></span></div>
       <button data-act="open-note" data-id="${esc(n.id)}"><span class="meta">${esc(fmtDay(dayKey(n.date)))}${n.from!=="Me"?`<span class="tag t-sensei">${esc(n.from)}</span>`:""}${n.type!=="Kata"?`<span class="tag">${esc(t.s)}</span>`:""}</span>
       <span class="ntitle" style="font-size:15px">${esc(noteTitle(n))}</span>${n.title&&n.note?`<span class="nsnip">${esc(toPoints(n.note).join(" · "))}</span>`:""}</button></div>`;}).join("")
-      :`<p class="sub">No notes on ${esc(name)} yet.</p>`}</div>`;
+      :`<p class="sub">No notes on ${esc(name)} yet.</p>`}</div>
+    <div class="pad klink"><a href="${KATA_SITE}?kata=${encodeURIComponent(name)}" target="_blank" rel="noopener">Open in the dojo Kata Tracker<span style="width:16px;height:16px;display:inline-flex">${I.ext}</span></a></div>`;
 }
 
 /* ---------- panels ---------- */

@@ -12,7 +12,7 @@ Gary's private karate notebook. Tabs (Nov 2026 redesign, sorted by how long he n
 | --- | --- |
 | Live app | https://karate-ka-companion.pages.dev/ (Cloudflare Pages from `main`, build output directory `web`, so only `web/` is published) |
 | Database | Google Sheet **Karate-Ka Companion**, id `1i-PHNQd0pZOTOAUZvysY61XwsoartfMaU1Fb6Mn73OM`. Tabs: Notes, Assignments, My kata, Access. Notes columns added Nov 2026: **Keep in mind**, **Month review (YYYY-MM)**. My kata columns added Nov 8: **Working on (shows on Now)**, **Kata notes (date | point, one per line)** |
-| Backend | Apps Script bound to the sheet; source is `Code.gs`. Web app version 6 (Execute as Gary, Anyone), URL in `API_URL` in index.html |
+| Backend | Apps Script bound to the sheet; source is `Code.gs`. Web app version 9 (Execute as Gary, Anyone), URL in `API_URL` in index.html |
 | Kata names | Read-only from the Kata Tracker sheet (`KATA_TRACKER_SHEET_ID`, tab "Kata"), cached 6 h |
 | Notifications | Push sender: Cloudflare Pages Function `functions/push/[[path]].js` (copied from Home-and-Hobby; `/push/keys`, `/push/send`, stateless). Scheduler: Apps Script `pushTick` every 5 min, started by menu **Turn on notifications**. VAPID keys in Script properties `VAPID_PUBLIC`/`VAPID_PRIVATE`, `PUSH_ON`=1 when on; settings JSON in `NOTIFY`. Tabs **Devices** (phones, owner only) and **Sent** (log; its Tag stops repeats; never sent to the app) |
 | Setup guide | `SETUP.md` |
@@ -95,26 +95,25 @@ Inside the `index.html` script, search for:
 
 ## Status
 - Working: Nov 2026 redesign (Now / Notes / Kata / Assignments / Keep in mind, point-form notes, multi-kata, month review). sw v10.
-- Kata notes + Working on + Now calendar built (2026-11-08). Needs Code.gs deployed (new My kata columns) before they save. sw v12.
-- Notifications built (2026-11-03): push sender, scheduler, settings panel. Needs Code.gs deployed, then menu **Turn on notifications** once, then the bell on Now → Turn on (per phone). sw v11.
+- Kata notes + Working on + Now calendar built (2026-11-08); Code.gs deployed (web app v9). sw v12.
+- Notifications built (2026-11-03): push sender, scheduler, settings panel. Code.gs deployed (web app v9); still needs menu **Turn on notifications** once, then the bell on Now → Turn on (per phone). sw v11.
 - Open: publishing the OAuth app needs a home page and privacy link on the Branding page.
 
 ## For Gary
 
 Steps only Gary can do (App Atlas shows these as his to-dos). One line each; delete a line once it's done.
 
-- [ ] Deploy Code.gs (clasp push + clasp deploy -i …) for kata notes and Working on
 - [ ] Sheet menu: Karate-Ka Companion, Turn on notifications
 - [ ] In the app: bell on Now, Turn on (each phone)
 - [ ] Set your class days and times
 - [ ] Add a home page and privacy link on the Google sign-in Branding page
 
 ## Changelog (latest first, keep about 5 lines)
+- 2026-11-12: Deployed Code.gs (notifications, kata notes, Working on), web app v9
 - 2026-11-11: Notification status-bar icon: `web/badge-96.png` (white onigiri on transparent; Android draws badges as a one-colour silhouette, so the opaque favicon showed as a white/black square). sw v13
 - 2026-11-08: Kata notes (dated points per kata, kept forever), Working on this kata switch → Now row with inline add, Calendar drop-down on Now. My kata columns working + kpts. sw v12
 - 2026-11-03: Notifications: before/after class, assignment due, long-running Now items, month review, quiet hours; functions/push; Devices + Sent tabs; sw v11
 - 2026-11-03: Redesign: Now home, Notes list + calendar, Keep in mind tab, expandable rows, point-form notes, multi-kata, month review. Keep + review columns. sw v10
-- 2026-10-21: Moved the site files into `web/`; only that folder is published
 - 2026-10-22: Trimmed this brief
 
 ## Working efficiently
